@@ -1,0 +1,840 @@
+
+\chapter{Network Optimization Problems}
+
+
+In this section, I will briefly introduce some network optimization problems that are commonly studied and used in operation research and how we can code them in \julia{}.
+
+
+\section{Minimal-Cost Network-Flow Problem} \label{sec:mcnf}
+
+The minimal-cost network-flow problem deals with a single commodity that need to be distributed over a network. Consider a directed graph $G=(\Nc,\Ac)$ with the set of nodes $\Nc$ and the set of links $\Ac$. The cost of sending a unit flow on link $(i,j)\in\Ac$ is $c_{ij}$. There are three types of nodes: source nodes, sink nodes, and intermediate nodes. The single commodity are supplied from source nodes and need to be delivered to sink nodes. Intermediate nodes are neither source nor sink nodes; the commodity just passes through intermediate nodes.
+
+We first define $b_i$ for each node $i\in\Nc$. For source nodes, $b_i$ denotes the amount of supply and $b_i>0$. On the other hand, $b_i<0$ denotes the demand size for sink nodes. For intermediate nodes, $b_i=0$. For the simplicity, we assume $\sum_{i\in\Nc} b_i = 0$, which can be relaxed easily.
+
+We also introduce decision variables $x_{ij}$, which is the amount of flow on link $(i,j)$. We only consider nonnegative flow, i.e., $x_{ij} \geq 0$ for all $(i,j)\in\Ac$. There may be upper bounds on $x_{ij}$, denoted by $u_{ij}$; that is, $x_{ij} \leq u_{ij}$. If there is no upper bound on link $(i,j)$, the constant $u_{ij}$ shall be set to infinity.
+
+The purpose of the minimal-cost network-flow problem is to determine how we should distribute the given supply from the source nodes to meet the demand requirements of the sink nodes with the minimal cost. That is, we solve the following linear programming (LP) problem:
+\begin{equation}
+    \label{mcnf0}
+	\min_{\vect{x}} \sum_{(i,j)\in\Ac} c_{ij} x_{ij}
+\end{equation}
+subject to
+\begin{equation}
+    \label{mcnf1}
+    \sum_{(i,j)\in\Ac} x_{ij} - \sum_{(j,i)\in\Ac} x_{ji} = b_i \qquad \forall i\in\Nc
+\end{equation}
+\begin{equation}
+    \label{mcnf2}
+    0 \leq x_{ij} \leq u_{ij}  \qquad \forall (i,j)\in\Ac
+\end{equation}
+where \eqref{mcnf1} is the flow conservation constraint, and \eqref{mcnf2} is the nonnegativity constraint.
+
+Since the minimal-cost network flow problem \eqref{mcnf0}--\eqref{mcnf2} is an LP problem, it can be quite easily solved by various methods and there are many LP solvers available. It is indeed a matter of data preparation and implementation of the model in computer programming language. The data we need to prepare are: the unit-flow link cost $c_{ij}$, and the amount of supply/demand in each node $b_i$. In addition to these obvious parameters, we also need to prepare more important data: the network structure itself, which describes how nodes and links are connected.
+
+
+
+\begin{figure} \centering
+\image{images/network/example_mcnf.pdf}
+\caption{A simple network with 5 nodes and 8 links. There is a link with an upper bound on the amount of link flow: $u_{35}=1$. \label{fig:example_mcnf}}
+\end{figure}
+
+
+As an example, let us consider a simple network shown in Figure \ref{fig:example_mcnf}. For each directed link $(i,j)\in\Ac$, let us call $i$ the start node, and $j$ the end node. We prepare data in tabular form:
+\begin{center}
+\begin{tabular}{|r|r|r|r|}
+\hline
+start node $i$ & end node $j$ &  $c_{ij}$ &     $u_{ij}$ \\
+\hline
+             1 &            2 &         2 &     $\infty$ \\
+             1 &            3 &         5 &     $\infty$ \\
+             2 &            3 &         3 &     $\infty$ \\
+             3 &            4 &         1 &     $\infty$ \\
+             3 &            5 &         2 &            1 \\
+             4 &            1 &         0 &     $\infty$ \\
+             4 &            5 &         2 &     $\infty$ \\
+             5 &            2 &         4 &     $\infty$ \\
+\hline
+\end{tabular}
+\end{center}
+Let us use `\kode{Inf}' for $\infty$ in our data preparation. In a spreadsheet, it looks like:
+\imagebox{images/network/simple_network.png}
+In the CSV format, it looks like:
+\begin{codelisting}
+\codecaption{\filepath{code/chap5/simple\_network.csv}}
+%= <<(code/chap5/simple_network.csv, lang: text)
+\end{codelisting}
+As we have seen in Section \ref{sec:file_io}, we read this CSV file using \kode{readcsv} in \julia{} as follows:
+%= lang: julia
+\begin{code}
+network_data_file = "simple_network.csv"
+network_data = readcsv(network_data_file,  header=true)
+data = network_data[1]
+header = network_data[2]
+\end{code}
+Then we save the data in the format we want:
+%= lang: julia
+\begin{code}
+start_node = round(Int64, data[:,1])
+end_node = round(Int64, data[:,2])
+c = data[:,3]
+u = data[:,4]
+\end{code}
+\noindent where \kode{round} is used to convert, for example, \kode{1.0} to \kode{1}. \julia{} can automatically recognize the text `\kode{Inf}' as the numeric data $\infty$. The vector of upper bound $\vect{u}$ is stored as follows:
+%= lang: julia
+\begin{code}
+julia> u
+8-element Array{Float64,1}:
+ Inf
+ Inf
+ Inf
+ Inf
+   1.0
+ Inf
+ Inf
+ Inf
+\end{code}
+\noindent We see \kode{Inf} of the \kode{Float64} type.
+
+For the vector $\vect{b}$, we also prepare a CSV file:
+
+\imagebox{images/network/simple_network_b.png}
+
+\noindent and read the CSV file in \julia{}:
+%= lang: julia
+\begin{code}
+network_data2_file = "simple_network_b.csv"
+network_data2 = readcsv(network_data2_file,  header=true)
+data2 = network_data2[1]
+hearder2 = network_data2[2]
+
+b = data2[:,2]
+\end{code}
+
+While doing \julia{} programming for a network optimization problem, we may need to know the number of nodes and the number of links in the graph. We may explicitly specify those two numbers in a CSV file and read it to \julia{}. If the numbering of nodes starts from 1 and all positive integers are used without missing any number in the middle, we know that the biggest number used in \kode{start\_node} and \kode{end\_node} is equal to the number of all nodes in the graph. We have the following code:
+%= lang: julia
+\begin{code}
+no_node = max( maximum(start_node), maximum(end_node) )
+no_link = length(start_node)
+\end{code}
+\noindent where the number of links is simply the number of elements in \kode{start\_node}, or \kode{end\_node}---they should be same. Note the difference of \kode{max} and \kode{maximum}: \kode{max} is used to compare two different numbers and \kode{maximum} is used to identify the biggest number among all elements in a vector.
+
+Now we create an array object for the set of nodes $\Nc$ and the set of links $\Ac$:
+%= lang: julia
+\begin{code}
+nodes = 1:no_node
+links = Array{Tuple{Int, Int}}(no_link)
+for i=1:no_link
+   	links[i] = (start_node[i], end_node[i])
+end
+\end{code}
+The set of links looks like:
+%= lang: julia
+\begin{code}
+julia> links
+8-element Array{Tuple{Int64,Int64},1}:
+ (1,2)
+ (1,3)
+ (2,3)
+ (3,4)
+ (3,5)
+ (4,1)
+ (4,5)
+ (5,2)
+\end{code}
+
+We will use this array \kode{links} for modeling the minimal-cost network-flow problem. Accordingly, we prepare $\vect{c}$ and $\vect{u}$ in the format of dictionaries:
+%= lang: julia
+\begin{code}
+c_dict = Dict()
+u_dict = Dict()
+for i=1:no_link
+    c_dict[(start_node[i], end_node[i])] = c[i]
+    u_dict[(start_node[i], end_node[i])] = u[i]
+end
+\end{code}
+\noindent For example, \kode{c\_dict} looks like:
+%= lang: julia
+\begin{code}
+julia> c_dict
+Dict{Any,Any} with 8 entries:
+  (3,5) => 2.0
+  (4,5) => 2.0
+  (1,2) => 2.0
+  (2,3) => 3.0
+  (5,2) => 4.0
+  (4,1) => 0.0
+  (1,3) => 5.0
+  (3,4) => 1.0
+\end{code}
+
+
+
+We are finally ready for writing the minimal-cost network-flow problem using \jump{}. First, import the necessary packages:
+%= lang: julia
+\begin{code}
+using JuMP, Gurobi
+\end{code}
+\noindent We prepare an optimization model:
+%= lang: julia
+\begin{code}
+mcnf = Model(solver=GurobiSolver())
+\end{code}
+\noindent We define the decision variables:
+%= lang: julia
+\begin{code}
+@defVar(mcnf, 0<= x[link in links] <= u_dict[link])
+\end{code}
+\noindent where the bounds on $\vect{x}$ are introduced at the same time. We set the objective:
+%= lang: julia
+\begin{code}
+@setObjective(mcnf, Min, sum{c_dict[link] * x[link], link in links})
+\end{code}
+\noindent Here is the best part. We add the flow conservation constraints:
+%= lang: julia
+\begin{code}
+for i in nodes
+   @addConstraint(mcnf, sum{x[(ii,j)], (ii,j) in links; ii==i}
+                      - sum{x[(j,ii)], (j,ii) in links; ii==i} == b[i])
+end
+\end{code}
+\noindent where \kode{ii} is a dummy index for \kode{i}. Compare the above code with the mathematical expression:
+\[
+	\sum_{(i,j)\in\Ac} x_{ij} - \sum_{(j,i)\in\Ac} x_{ji} = b_i \qquad \forall i\in\Nc
+\]
+The \julia{} code is almost a direct translation of the original mathematical expression.
+
+When printed, the model looks like:
+%= lang: julia
+\begin{code}
+julia> print(mcnf)
+Min 2 x[(1,2)] + 5 x[(1,3)] + 3 x[(2,3)] + x[(3,4)]
++ 2 x[(3,5)] + 2 x[(4,5)] + 4 x[(5,2)]
+Subject to
+ x[(1,2)] + x[(1,3)] - x[(4,1)] = -5
+ x[(2,3)] - x[(1,2)] - x[(5,2)] = 10
+ x[(3,4)] + x[(3,5)] - x[(1,3)] - x[(2,3)] = 0
+ x[(4,1)] + x[(4,5)] - x[(3,4)] = -2
+ x[(5,2)] - x[(3,5)] - x[(4,5)] = -3
+ 0 ≤ x[link] ≤ … ∀ link ∈ {(1,2),(1,3),…,(4,5),(5,2)}
+\end{code}
+
+We solve the problem and print the solution status:
+%= lang: julia
+\begin{code}
+status = solve(mcnf)
+println("The solution status is: $status")
+\end{code}
+\noindent which will print out:
+%= lang: julia
+\begin{code}
+The solution status is: Optimal
+\end{code}
+\noindent For infeasible or unbounded problems, it will say so.
+
+We retrieve the optimal objective function value and the optimal solution we obtained:
+%= lang: julia
+\begin{code}
+obj = getObjectiveValue(mcnf)
+x_star = getValue(x)
+\end{code}
+\noindent We observe that \kode{x\_star} is a dictionary type, particularly defined by \jump{}:
+%= lang: julia
+\begin{code}
+julia> x_star = getValue(x)
+x: 1 dimensions, 8 entries:
+ [(1,2)] = 0.0
+ [(1,3)] = 0.0
+ [(2,3)] = 10.0
+ [(3,4)] = 9.0
+ [(3,5)] = 1.0
+ [(4,1)] = 5.0
+ [(4,5)] = 2.0
+ [(5,2)] = 0.0
+
+julia> typeof(x_star)
+JuMP.JuMPDict{Float64,1}
+\end{code}
+
+This optimal solution is presented in Figure \ref{fig:solution_mcnf}.
+
+
+\begin{figure}
+\image{images/network/solution_mcnf.pdf}
+\caption{The optimal solution of the minimal-cost network-flow problem\label{fig:solution_mcnf}}
+\end{figure}
+
+
+
+The complete code is presented:
+\begin{codelisting}
+\codecaption{Min-Cost Network-Flow Problem \\ \filepath{code/chap5/mcnf\_example1.jl}}
+%= <<(code/chap5/mcnf_example1.jl, lang: julia)
+\end{codelisting}
+
+Since the minimal-cost network-flow problem is a general form of many other problems, we save the code as a separate function. We prepare a \kode{mcnf.jl} file and define a function \kode{minimal\_cost\_network\_flow}:
+\begin{codelisting}
+\codecaption{Min-Cost Network-Flow Problem \\ \filepath{code/chap5/mcnf.jl}}
+%= <<(code/chap5/mcnf.jl, lang: julia)
+\end{codelisting}
+
+After including the function definition by
+%= lang: julia
+\begin{code}
+include("mcnf.jl")
+\end{code}
+\noindent we can solve the minimal-cost network-flow problem by a function call as follows:
+%= lang: julia
+\begin{code}
+x_star, obj, status =
+	minimal_cost_network_flow(nodes, links, c_dict, u_dict, b)
+\end{code}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Transportation Problem}
+
+
+\begin{figure}
+\image{images/network/example_transportation.pdf}
+\caption{A simple example of the transportation problem.\label{fig:transportation}}
+\end{figure}
+
+
+
+The transportation problem is a special case of the minimal-cost network-flow problem. There are only source and sink nodes without any no intermediate node. Any source node is directly connected with all sink nodes, and any sink node is directly connected with all source nodes. For example, see Figure \ref{fig:transportation}. Austin and Buffalo are source nodes (or supply nodes), while Chicago, Denver, and Erie are sink nodes (or demand nodes).
+
+Let the set of supply nodes $\Nc_S$ and the set of demand nodes $\Nc_D$. We should have $\Nc_S \cap \Nc_D = \emptyset$, and $\Nc_S \cup \Nc_D = \Nc$. We can formulate the transportation problem as follows:
+\begin{equation*}
+	\min \sum_{i\in\Nc_S} \sum_{j\in\Nc_D} c_{ij} x_{ij}
+\end{equation*}
+subject to
+\begin{align*}
+	\sum_{j\in\Nc_D} x_{ij} = s_i & \qquad \forall i\in\Nc_S \\
+	\sum_{i\in\Nc_D} x_{ij} = d_j & \qquad \forall j\in\Nc_D \\
+	x_{ij} \geq 0 & \qquad \forall i\in\Nc_S, j\in\Nc_D
+\end{align*}
+where $c_{ij}$ is the unit transportation cost from supply node $i$ to demand node $j$, and $s_i$ and $d_j$ are \emph{nonnegative} constants for the supply and demand amounts, respectively. Without loss of generality, we assume $\sum_{i\in\Nc_S}s_i = \sum_{j\in\Nc_D}d_j$.
+
+
+%\multicolumn{4}{ c| }
+We may have the following tabular data for the problem in Figure \ref{fig:transportation}:
+\begin{center}
+\newcommand{\nb}[1]{#1}
+\newcommand{\nl}[1]{#1}
+\begin{tabular}{|r|l|r|r|r|}
+\hline
+\nb{}	& 	\nb{}	&	\nb{15} &  \nb{12} &  \nb{13} \\
+\hline
+\nb{}	& 			&	Chicago	&	Denver &	Erie \\
+\hline
+\nl{15}	& Austin	&		 10 &        7 &       9 \\
+\nl{25}	& Buffalo 	&         4 &        9 &       8 \\
+\hline
+\end{tabular}
+\end{center}
+% \begin{center}
+% \newcommand{\nb}[1]{\multicolumn{1}{r}{#1}}
+% \newcommand{\nl}[1]{\multicolumn{1}{r|}{#1}}
+% \begin{tabular}{|r|l|r|r|r|}
+% \nb{}	& 	\nb{}	&	\nb{15} &  \nb{12} &  \nb{13} \\
+% \cline{3-5}
+% \nb{}	& 			&	Chicago	&	Denver &	Erie \\
+% \cline{2-5}
+% \nl{15}	& Austin	&		 10 &        7 &       9 \\
+% \nl{25}	& Buffalo 	&         4 &        9 &       8 \\
+% \cline{2-5}
+% \end{tabular}
+% \end{center}
+In a spreadsheet, we have:
+\begin{center}
+\imagebox{images/network/transportation.png}
+\end{center}
+The first row is for $d_j$, while the first column is for $s_i$. After saving the data in the CSV format, we read the data:
+%= lang: julia
+\begin{code}
+julia> data = readcsv("transportation.csv")
+4x5 Array{Any,2}:
+   ""  ""         15           12          13
+   ""  ""           "Chicago"    "Denver"    "Erie"
+ 15    "Austin"   10            7           9
+ 25    "Buffalo"   4            9           8
+\end{code}
+
+
+Note that we did not use the header option. The read data looks:
+
+The list of supply nodes and $\vect{s}$ can be accessed by:
+%= lang: julia
+\begin{code}
+julia> supply_nodes = data[3:end, 2]
+2-element Array{Any,1}:
+ "Austin"
+ "Buffalo"
+
+julia> s = data[3:end, 1]
+2-element Array{Any,1}:
+ 15
+ 25
+\end{code}
+
+Similarly for demand nodes:
+%= lang: julia
+\begin{code}
+julia> demand_nodes = data[2, 3:end]
+1x3 Array{Any,2}:
+ "Chicago"  "Denver"  "Erie"
+
+julia> d = data[1, 3:end]
+1x3 Array{Any,2}:
+ 15  12  13
+\end{code}
+
+
+Since we are reading rows of \kode{data}, we obtain 1 by 3 arrays. We make them simple one dimensional arrays by using the \kode{collect} function:
+%= lang: julia
+\begin{code}
+julia> demand_nodes = collect(data[2, 3:end])
+3-element Array{Any,1}:
+ "Chicago"
+ "Denver"
+ "Erie"
+
+julia> d = collect(data[1, 3:end])
+3-element Array{Any,1}:
+ 15
+ 12
+ 13
+\end{code}
+
+Finally the unit transportation cost:
+%= lang: julia
+\begin{code}
+julia> c = data[3:end, 3:end]
+2x3 Array{Any,2}:
+ 10  7  9
+  4  9  8
+\end{code}
+
+
+
+
+To make modeling by the \jump{} package easier, we prepare dictionary objects for \kode{s}, \kode{d}, and \kode{c}.
+%= lang: julia
+\begin{code}
+s_dict = Dict()
+for i in 1:length(supply_nodes)
+	s_dict[supply_nodes[i]] = s[i]
+end
+\end{code}
+\noindent The result is:
+%= lang: julia
+\begin{code}
+julia> s_dict
+Dict{Any,Any} with 2 entries:
+  "Buffalo" => 25
+  "Austin"  => 15
+\end{code}
+
+For the dictionary object \kode{s\_dict}, keys are in \kode{supply\_nodes} and values are in \kode{s}; the saved orders are same in both arrays. We can simply do the following:
+%= lang: julia
+\begin{code}
+julia> s_dict = Dict( zip( supply_nodes, s) )
+Dict{Any,Any} with 2 entries:
+  "Buffalo" => 25
+  "Austin"  => 15
+\end{code}
+
+Similarly, for the demand nodes:
+%= lang: julia
+\begin{code}
+julia> d_dict = Dict( zip( demand_nodes, d) )
+Dict{Any,Any} with 3 entries:
+  "Chicago" => 15
+  "Erie"    => 13
+  "Denver"  => 12
+\end{code}
+
+For \kode{c}, we can do a double-loop as follows:
+%= lang: julia
+\begin{code}
+c_dict = Dict()
+for i in 1:length(supply_nodes)
+    for j in 1:length(demand_nodes)
+        c_dict[supply_nodes[i], demand_nodes[j]] = c[i,j]
+    end
+end
+\end{code}
+\noindent which results in:
+%= lang: julia
+\begin{code}
+julia> c_dict
+Dict{Any,Any} with 6 entries:
+  ("Austin","Chicago")  => 10
+  ("Buffalo","Denver")  => 9
+  ("Austin","Erie")     => 9
+  ("Buffalo","Chicago") => 4
+  ("Austin","Denver")   => 7
+  ("Buffalo","Erie")    => 8
+\end{code}
+
+Then we are done with the data preparation.
+
+The optimization model can be written as easy as the following code:
+%= lang: julia
+\begin{code}
+using JuMP, Gurobi
+tp = Model(solver=GurobiSolver())
+
+@defVar(tp, x[supply_nodes, demand_nodes] >= 0)
+@setObjective(tp, Min, sum{c_dict[i,j]*x[i,j],
+                              i in supply_nodes, j in demand_nodes})
+for i in supply_nodes
+    @addConstraint(tp, sum{x[i,j], j in demand_nodes} == s_dict[i] )
+end
+for j in demand_nodes
+    @addConstraint(tp, sum{x[i,j], i in supply_nodes} == d_dict[j] )
+end
+\end{code}
+\noindent The constructed model looks:
+%= lang: julia
+\begin{code}
+julia> print(tp)
+Min 10 x[Austin,Chicago] + 7 x[Austin,Denver] + 9 x[Austin,Erie]
++ 4 x[Buffalo,Chicago] + 9 x[Buffalo,Denver] + 8 x[Buffalo,Erie]
+Subject to
+ x[Austin,Chicago] + x[Austin,Denver] + x[Austin,Erie] = 15
+ x[Buffalo,Chicago] + x[Buffalo,Denver] + x[Buffalo,Erie] = 25
+ x[Austin,Chicago] + x[Buffalo,Chicago] = 15
+ x[Austin,Denver] + x[Buffalo,Denver] = 12
+ x[Austin,Erie] + x[Buffalo,Erie] = 13
+ x[i,j] ≥ 0 ∀ i ∈ {Austin,Buffalo}, j ∈ {Chicago,Denver,Erie}
+\end{code}
+\noindent and its solutions are:
+%= lang: julia
+\begin{code}
+julia> solve(tp)
+
+julia> x_star = getValue(x)
+x: 2 dimensions, 6 entries:
+ [ Austin,Chicago] = 0.0
+ [ Austin, Denver] = 12.0
+ [ Austin,   Erie] = 3.0
+ [Buffalo,Chicago] = 15.0
+ [Buffalo, Denver] = 0.0
+ [Buffalo,   Erie] = 10.0
+\end{code}
+
+
+The complete code is presented:
+\begin{codelisting}
+\codecaption{Transportation Problem \\ \filepath{code/chap5/transportation1.jl}}
+%= <<(code/chap5/transportation1.jl, lang: julia)
+\end{codelisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Shortest Path Problem}
+
+The shortest path problem is perhaps the most famous and important problem in network optimization. It finds a path from a given origin node to a given destination node with the least path cost. It is a special case of the minimal-cost network-flow problem; therefore the shortest-path problem can be solved as a linear programming problem. The problem in linear programming form looks as follows:
+\begin{equation}
+\label{spp0}
+\min_{\vect{x}} \sum_{(i,j)\in\Ac} c_{ij} x_{ij}
+\end{equation}
+subject to
+\begin{equation}
+\label{spp1}
+\sum_{(i,j)\in\Ac} x_{ij} - \sum_{(j,i)\in\Ac} x_{ji} = \begin{cases}
+			 1 & \text{if $i$ is the origin node} \\
+			-1 & \text{if $i$ is the destination node} \\
+			 0 & \text{otherwise}
+	\end{cases} \qquad \forall i\in\Nc
+\end{equation}
+\begin{equation}
+\label{eq:spp2}
+x_{ij} \in \{0,1\}  \qquad \forall (i,j)\in\Ac
+\end{equation}
+where the binarity constraint \eqref{eq:spp2} can be relaxed as $0\leq x_{ij}\leq 1$ due to the total unimodularity property of the problem structure.
+
+While the shortest path problem can certainly be solved as an LP, there are more efficient algorithms such as Dijkstra's algorithm. The Julia Language provides the \kode{Graphs.jl} package for handling graph structures and algorithms for shortest paths. We will figure out how to use functions from the \kode{Graphs.jl} package.
+
+\begin{figure}
+\image{images/network/example_ssp.pdf}
+\caption{The same network as in Figure \ref{fig:example_mcnf}, now for the shortest path problem between origin node 1 to destination node 5 \label{fig:example_ssp}}
+\end{figure}
+
+
+
+First consider the example network in Figure \ref{fig:example_ssp}, which is a representation of Figure \ref{fig:example_mcnf}. For preparing and reading data files, please refer to Section \ref{sec:mcnf}; the only difference is the upper bound $u$ is irrelevant in the shortest path problem.
+%= lang: julia
+\begin{code}
+network_data_file = "simple_network.csv"
+network_data = readcsv(network_data_file,  header=true)
+data = network_data[1]
+header = network_data[2]
+
+start_node = round(Int64, data[:,1])
+end_node = round(Int64, data[:,2])
+c = data[:,3]
+\end{code}
+\noindent We have three arrays ready: \kode{start\_node}, \kode{end\_node}, and \kode{c}. We also set the origin and destination:
+%= lang: julia
+\begin{code}
+origin = 1
+destination = 5
+\end{code}
+\noindent and determine the number of nodes and the number of links:
+%= lang: julia
+\begin{code}
+no_node = max( maximum(start_node), maximum(end_node) )
+no_link = length(start_node)
+\end{code}
+
+
+
+Using the \kode{Graphs.jl} package, we will create a graph object:
+%= lang: julia
+\begin{code}
+using Graphs.jl
+graph = simple_inclist(no_node)
+\end{code}
+\noindent We just created a graph object. The function name \kode{simple\_inclist} means a simple incidence list wherein we will specify how nodes are connected.
+
+We add links to the graph object:
+%= lang: julia
+\begin{code}
+for i=1:no_link
+	add_edge!(graph, start_node[i], end_node[i])
+end
+\end{code}
+\noindent Note that Julia functions with the exclamation mark `!' changes the value of the argument. In this case, \kode{add\_edge!} changes the inner value of \kode{graph}, since we are adding links one by one. This procedure only construct the organization of the network without specifying how long each link is.
+
+Now, we run Dijkstra's algorithm:
+%= lang: julia
+\begin{code}
+state = dijkstra_shortest_paths(graph, c, origin)
+\end{code}
+\noindent In the above code, the link length information is passed by the \kode{c} array. The order you add links by the \kode{add\_edge!} function and the order of links stored in the \kode{c} array must be identical. Note that in the above code, \kode{destination} is not passed. It is because Dijkstra's algorithm finds shortest paths from a single origin to \emph{all} nodes in the network. Such algorithms are called one-to-all algorithms.
+
+
+
+The results of Dijkstra's algorithm are stored in the \kode{state} variable. To retrieve the results in useful forms, we need some work. Two forms will be most useful: (1) the shortest path as an ordered list of nodes, and (2) a binary vector $\vect{x}$ wherein the $i$-th component $x_i=1$ if $i$-th link is used in the shortest path. In this purpose two functions \kode{getShortestPath} and \kode{getShortestX} are prepared. See the full code:
+\begin{codelisting}
+\codecaption{Dijkstra's algorithm \\ \filepath{code/chap5/ssp\_example1.jl}}
+%= <<(code/chap5/ssp_example1.jl, lang: julia)
+\end{codelisting}
+
+
+
+
+The result looks like:
+%= lang: julia
+\begin{code}
+julia> include("ssp_example1.jl")
+The shortest path is:[1,3,5]
+x vector:[0,1,0,0,1,0,0,0]
+Cost is 7.0
+Cost is 7.0
+Cost is [7.0]
+\end{code}
+
+One may wish to see the $x$ vector with the start and end nodes:
+%= lang: julia
+\begin{code}
+julia> [start_node end_node x]
+8x3 Array{Int64,2}:
+ 1  2  0
+ 1  3  1
+ 2  3  0
+ 3  4  0
+ 3  5  1
+ 4  1  0
+ 4  5  0
+ 5  2  0
+\end{code}
+
+
+
+\section{Implementing Dijkstra's Algorithm}
+
+In the previous section, we have used the \kode{Graphs.jl} package to solve the shortest path problem. In this section, we will implement Dijkstra's algorithm by ourself. Of course, the code will not be as efficient as the \kode{Graphs.jl} package. Our own implementation will be a good practice of Julia programming and it may be a good reference for implementing other label-setting or label-correction algorithms.
+
+The origin node is $o$ and the destination node is $d$. Let's look at the algorithm description:
+\begin{itemize}
+\item \textbf{Step 0.} Initialize: $w_1=0$ and $\Xc=\{o\}$.
+\item \textbf{Step 1.} When $\bar{\Xc} = \Nc \setminus \Xc$, find the set
+\[
+	(\Xc,\bar{\Xc}) = \{ (i,j) : i\in\Xc, j\in\bar{\Xc} \}
+\]
+\item \textbf{Step 2.} Find a link $(p,q)$ such that
+\[
+	w_p + c_{pq} = \min \bigg\{ w_i + c_{ij} : (i,j)\in(\Xc,\bar{\Xc}) \text{ and } (i,j)\in\Ac \bigg\}
+\]
+\item \textbf{Step 3.} Set $w_q = w_p + c_{pq}$ and add the node $q$ to the set $\Xc$.
+\item \textbf{Step 4.} If the new $\bar{\Xc} = \Nc \setminus \Xc$ is an empty set, stop. Otherwise, go to Step 1 and repeat.
+\end{itemize}
+
+Alternatively, in Step 4, one can terminate the algorithm once the destination node $d$ is labeled, i.e. when $q=d$, when the shortest path to one destination is of interest. For the details of the algorithm see Bazaraa et al. (2011)\footnote{Bazaraa, M.S., Jarvis, J.J. and Sherali, H.D., 2011. Linear programming and network flows. John Wiley \& Sons.} or Ahuja et al. (1993)\footnote{Ahuja, R.K., Magnanti, T.L. and Orlin, J.B., 1993. Network flows: Theory, algorithms, and applications. Prentice Hall}.
+
+If we look at the algorithms, we basically need the set of nodes $\Nc$, the set of links $\Ac$, and $c_{ij}$ as input data. As described in the previous section, we have \kode{start\_node}, \kode{end\_node}, and \kode{c} for these data. The algorithm will update the values of a vector $\vect{w}$ and the two sets $\Xc$ and $\bar{\Xc}$.
+
+Let's first prepare variables. Here is $\Nc$:
+%= lang: julia
+\begin{code}
+julia> N = Set(1:no_node)
+Set([4,2,3,5,1])
+\end{code}
+\noindent where \kode{Set} is used. We can think of \kode{Set} as a special type of arrays. This literally represents a set and is useful when the order of elements saved in the array is unimportant. Next, we prepare $\Ac$ and $\vect{c}$ as a dictionary:
+%= lang: julia
+\begin{code}
+A = Set{Tuple{Int,Int}}()
+c_dict = Dict()
+for i in 1:no_link
+	push!(A, (start_node[i], end_node[i]))
+	c_dict[(start_node[i], end_node[i])] = c[i]
+end
+\end{code}
+\noindent The set \kode{A} looks like:
+%= lang: julia
+\begin{code}
+julia>  A
+Set([(3,5),(4,5),(1,2),(2,3),(5,2),(4,1),(1,3),(3,4)])
+\end{code}
+\noindent Then, we prepare $\vect{w}$ as follows:
+%= lang: julia
+\begin{code}
+w = Array(Float64, no_node)
+\end{code}
+\noindent where we did not assign any value yet. It will have some default values.
+
+In Step 0, we initialize as follows:
+%= lang: julia
+\begin{code}
+w[origin] = 0
+X = Set{Int}({origin})
+Xbar = setdiff(N, X)
+\end{code}
+\noindent where we conveniently computed $\bar{\Xc} = \Nc \setminus \Xc$ using \kode{setdiff}.
+
+For the iterations in Steps 1 to 4, we will use a \kode{while}-loop as follows:
+%= lang: julia
+\begin{code}
+while !isempty(Xbar)
+	# Step 1
+	# Step 2
+	# Step 3
+	# Step 4
+end
+\end{code}
+\noindent The statement \kode{isempty(Xbar)} will return \kode{true} if there is no element in \kode{Xbar}, i.e. $\bar{\Xc}=\emptyset$. Therefore, the above \kode{while}-loop will repeat the steps while \kode{Xbar} is not an empty set and terminates when it is empty.
+
+In Step 1, we find the set $(\Xc,\bar{\Xc}) = \{ (i,j) : i\in\Xc, j\in\bar{\Xc} \}$, named as \kode{XX}:
+%= lang: julia
+\begin{code}
+XX = Set{Tuple{Int,Int}}()
+for i in X, j in Xbar
+	if (i,j) in A
+		push!(XX, (i,j))
+	end
+end
+\end{code}
+\noindent where the two \kode{for}-loops are used. Whenever we find a link from \kode{X} to \kode{Xbar}, we add it to \kode{XX}.
+
+In Step 2, we find
+\[
+w_p + c_{pq} = \min \bigg\{ w_i + c_{ij} : (i,j)\in(\Xc,\bar{\Xc}) \text{ and } (i,j)\in\Ac \bigg\}
+\]
+as follows:
+%= lang: julia
+\begin{code}
+min_value = Inf
+q = 0
+for (i,j) in XX
+	if w[i] + c_dict[(i,j)] < min_value
+		min_value = w[i] + c_dict[(i,j)]
+		q = j
+	end
+end
+\end{code}
+\noindent where \kode{min\_value} is used to record $w_p + c_{pq}$ and \kode{q} to record $q$. Note that \kode{min\_value} is initialized as $\infty$ and updated during the search of the minimum.
+
+Step 3 is as simple as:
+%= lang: julia
+\begin{code}
+w[q] = min_value
+push!(X, q)
+\end{code}
+
+Step 4 simply updates \kode{Xbar}:
+%= lang: julia
+\begin{code}
+Xbar = setdiff(N, X)
+\end{code}
+\noindent After this update of \kode{Xbar}, the \kode{while}-loop will evaluate the condition \kode{!isempty(Xbar)} again, to determine to continue or stop. When the \kode{while}-loop stops, we obtain \kode{w[destination]} as the length of the shortest path from origin to destination.
+
+The complete code is provided:
+\begin{codelisting}
+\codecaption{An implementation of Dijkstra's algorithm \\ \filepath{code/chap5/ssp\_example2.jl}}
+%= <<(code/chap5/ssp_example2.jl, lang: julia)
+\end{codelisting}
+The result is:
+%= lang: julia
+\begin{code}
+julia> include("ssp_example2.jl")
+The length of node 1 to node 5 is: 7.0
+\end{code}
+
+
+
+
+
+
+%
+%
+% \section{Dynamic Inventory Management Problem}
+%
+%
+% \section{Location Problem}
+%
+%
+% \section{The Traveling Salesman Problem}
+%
+%
+% \section{Investment Portfolio Optimization}
+%
+% CVaR?
+%
+%
+% \section{Option Pricing}

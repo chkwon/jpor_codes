@@ -1,0 +1,630 @@
+\chapter{Introduction and Installation}
+
+
+This chapter will introduce what the Julia Language is and explain why I love it. More importantly, this chapter will teach you how to obtain Julia and install it in your machine. Well, at this moment, the most challenging task for using Julia in computing would probably be installing the language and other libraries and programs correctly in your own machine. I will go over every step with fine details with screenshots for both Windows and Mac machines. I assumed that Linux users can handle the installation process well enough without much help from this book by reading online manuals and googling. Perhaps the Mac section could be useful to Linux users.
+
+
+\section{What is Julia and Why Julia?}
+
+The Julia Language is a very young language. As of March 5, 2016, the latest stable version is 0.4. The primary target of Julia is technical computing. It is developed for making technical computing more fun and more efficient. There are many good things about the Julia Language from the perspective of computer scientists and software engineers; you can read about the language at \href{http://julialang.org}{the official website}\footnote{\url{http://julialang.org}}.
+
+Here is a quote from the creators of Julia from their first official blog article \href{http://julialang.org/blog/2012/02/why-we-created-julia}{``Why We Created Julia''}\footnote{\url{http://julialang.org/blog/2012/02/why-we-created-julia}}:
+
+\begin{quote}
+``We want a language that's open source, with a liberal license. We want the speed of C with the dynamism of Ruby. We want a language that's homoiconic, with true macros like Lisp, but with obvious, familiar mathematical notation like Matlab. We want something as usable for general programming as Python, as easy for statistics as R, as natural for string processing as Perl, as powerful for linear algebra as Matlab, as good at gluing programs together as the shell. Something that is dirt simple to learn, yet keeps the most serious hackers happy. We want it interactive and we want it compiled.
+
+(Did we mention it should be as fast as C?)''
+\end{quote}
+
+So this is how Julia is created, to serve all above greedy wishes.
+
+Let me tell you my story. I used to be a Java developer for a few years before I joined a graduate school. My first computer codes for homework assignments and course projects were naturally written in Java; even before then, I used C for my homework assignments for computing when I was an undergraduate student. Later, in the graduate school, I started using MATLAB, mainly because my fellow graduate students in the lab were using MATLAB. I needed to learn from them, so I used MATLAB.
+
+I liked MATLAB. Unlike in Java and C, I don't need to declare every single variable before I use it; I just use it in MATLAB. Arrays are not just arrays in the computer memory; arrays in MATLAB are just like vectors and matrices. Plotting computation results is easy. For modeling optimization problems, I used GAMS and connected with solvers like CPLEX. While the MATLAB-GAMS-CPLEX chain suited my purpose well, I wasn't that happy with the syntax of GAMS---I couldn't fully understand---and the slow speed of the interface between GAMS and MATLAB. While CPLEX provides complete connectivities with C, Java, and Python, it was very basic with MATLAB.
+
+When I finished with my graduate degree, I seriously considered Python. It was---and still is---a very popular choice for many computational scientists. CPLEX also has a better support for Python than MATLAB. Unlike MATLAB, Python is free and open source software. However, I didn't go with Python and decided to stick with MATLAB. I personally don't like 0 being the first index of arrays in C and Java. In Python, it is also 0. In MATLAB, it is 1. For example, if we have a vector like:
+\[
+    \vect{v} = \begin{bmatrix} 1 \\ 0 \\ 3 \\ -1 \end{bmatrix}
+\]
+it may be written in MATLAB as:
+%= lang:matlab
+\begin{code}
+v = [1; 0; 3; -1]
+\end{code}
+The first element of this vector should be accessible by \kode{v(1)}, not \kode{v(0)}. The $i$-th element must be \kode{v(i)}, not \kode{v(i-1)}. So I stayed with MATLAB.
+
+Later in 2012, the Julia Language was introduced and it looked attractive to me, since at least the array index begins with 1. After some investigations, I didn't move to Julia at that time. It was ugly in supporting optimization modeling and solvers. I kept using MATLAB.
+
+In 2014, I came across several blog articles and tweets talking about Julia again. I gave it one more look. Then I found a package for modeling optimization problems in Julia, called JuMP---Julia for Mathematical Programming. After spending a few hours, I felt in love with JuMP and decided to go with Julia, well more with JuMP. Here is a part of my code for solving a network optimization problem:
+%= lang:julia
+\begin{code}
+m = Model()
+@defVar(m, 0<= x[links] <=1)
+
+@setObjective(m, Min, sum{c[(i,j)] * x[(i,j)], (i,j) in links} )
+
+for i=1:no_node
+  @addConstraint(m, sum{x[(ii,j)], (ii,j) in links; ii==i }
+                  - sum{x[(j,ii)], (j,ii) in links; ii==i } == b[i])
+end
+
+solve(m)
+\end{code}
+\noindent This is indeed a direct ``translation'' of the following mathematical language:
+\[
+\min \quad \sum_{(i,j)\in\Ac} c_{ij} x_{ij}
+\]
+subject to
+\begin{align*}
+    \sum_{(i,j)\in\Ac} x_{ij} - \sum_{(j,i)\in\Ac} x_{ji} = b_i \quad &\forall i\in\Nc \\
+    0 \leq x_{ij} \leq 1 \quad &\forall (i,j)\in\Ac
+\end{align*}
+I think it is a very obvious translation. It is quite beautiful, isn't it?
+
+CPLEX and its competitor Gurobi are also very smoothly connected with Julia via JuMP. Why should I hesitate? After two years of using Julia, I still love it---I even wrote a book, which you are reading now, about Julia!
+
+
+
+
+
+
+
+\section{Julia in the Cloud: JuliaBox} \label{sec:juliabox}
+
+You can enjoy many features of the Julia Language on the web at \url{http://juliabox.org}.  Log in with your Google account and create a ``New Notebook''.
+
+First, install the \kode{Clp.jl} and \kode{JuMP.jl} packages.
+
+%= lang: julia
+\begin{code}
+Pkg.add("Clp")
+Pkg.add("JuMP")
+\end{code}
+\noindent and press \kode{Shift+Enter} or click the ``play'' button to run your code. \clp{} provides an open source LP solver, and \jump{} provides a nice modeling interface.
+
+Copy this code to your screen:
+%= lang: julia
+\begin{code}
+using JuMP
+m = Model()
+@defVar(m, 0<= x <=40)
+@defVar(m, y <=0)
+@defVar(m, z <=0)
+@setObjective(m, Max, x + y + z)
+
+@addConstraint(m, const1, -x +  y + z <= 20)
+@addConstraint(m, const2,  x + 3y + z <= 30)
+
+solve(m)
+println("Optimal Solutions:")
+println("x = ", getValue(x))
+println("y = ", getValue(y))
+println("z = ", getValue(z))
+\end{code}
+\noindent and press \kode{Shift+Enter} or click the ``play'' button to run your code. The result will look like:
+
+\imagebox{images/introduction/juliabox.pdf}
+
+
+If you want to use commercial solvers \cplex{} or \gurobi{}, you have to install Julia in your computer. Please follow the instruction in the next section.
+
+
+
+
+\section{Installing Julia}
+Graduate students and researchers are strongly recommended to install \julia{} in their local computers. In this guide, we will first install the \gurobi{} optimizer and then \julia{}.
+
+\subsection{Installing Gurobi}
+
+First, install Gurobi Optimizer. Gurobi is a commercial optimization solver package for solving LP, MILP, QP, MIQP, etc, and it is free for students, teachers, professors, or anyone else related to educational organizations.
+
+\begin{enumerate}
+\item \href{http://user.gurobi.com/download/gurobi-optimizer}{Download Gurobi Optimizer}\footnote{\url{http://user.gurobi.com/download/gurobi-optimizer}} and install in your computer. (You will need to register as an academic user, or purchase a license.)
+\item \href{http://user.gurobi.com/download/licenses/free-academic}{Request a free academic license}\footnote{\url{http://user.gurobi.com/download/licenses/free-academic}} and follow their instruction to activate it.
+\end{enumerate}
+
+(Note to \textbf{Windows} users: The version you select, either 32-bit or 64-bit, needs to be consistent. That is, if you choose 64-bit Gurobi Optimizer, you will need to install 64-bit Julia in the next step. After installation, you \emph{must reboot} your computer.)
+
+If you are not eligible for free licenses for Gurobi, please go ahead and install Julia. There are open-source solvers available.
+
+The following two sections provide steps with screenshots to install the Julia Language, the JuMP package, and the Gurobi package. Windows users go to Section \ref{sec:julia_win}, and Mac users go to Section \ref{sec:julia_mac}.
+
+
+
+
+
+
+
+\subsection{Installing Julia in Windows} \label{sec:julia_win}
+
+\begin{itemize}
+\item \textbf{Step 1.} Download Julia from \href{http://julialang.org/downloads/}{the official website}.\footnote{\url{http://julialang.org/downloads/}} (Select an appropriate version: 32-bit or 64-bit, same as your Gurobi Optimizer version.)
+
+\imagebox{images/introduction/windows/download.png}
+
+\item \textbf{Step 2.}  Install Julia in \kode{C:\textbackslash julia}.
+
+\imagebox{images/introduction/windows/install_julia.png}
+
+\item \textbf{Step 3.} Open a Command Prompt and enter the following command:
+%= lang: console
+\begin{code}
+setx PATH "%PATH%;C:\julia\bin"
+\end{code}
+
+\imagebox{images/introduction/windows/set_path.png}
+
+If you don’t know how to open a Command Prompt, see \href{http://windows.microsoft.com/en-us/windows/command-prompt-faq}{this link}\footnote{\url{http://windows.microsoft.com/en-us/windows/command-prompt-faq}} (choose your Windows version, and see ``How do I get a command prompt'').
+
+\item \textbf{Step 4.} Open a \textbf{NEW} command prompt and type
+%= lang: console
+\begin{code}
+echo %PATH%
+\end{code}
+
+\imagebox{images/introduction/windows/echo_path.png}
+
+The output must include \kode{C:\textbackslash julia\textbackslash bin} in the end. If not, you must have something wrong.
+
+\item \textbf{Step 5.} Run \kode{julia}.
+
+\imagebox{images/introduction/windows/run_julia.png}
+
+You have successfully installed the Julia Language on your Windows computer. Now it’s time for installing additional packages for mathematical programming.
+
+\item \textbf{Step 6.} If you have not installed \gurobi{} yet in your system, please install it first. On your julia prompt, type
+%= lang: julia
+\begin{code}
+Pkg.add("JuMP")
+Pkg.add("Gurobi")
+\end{code}
+
+(If you are ineligible to use a free license of Gurobi, use the \kode{Cbc} solver: \kode{Pkg.add("Cbc")})
+
+\imagebox{images/introduction/windows/install_jump.png}
+\imagebox{images/introduction/windows/install_gurobi.png}
+
+\item \textbf{Step 7.} Open Notepad (or any other text editor, for example \href{http://atom.io}{Atom}\footnote{\url{http://atom.io}}) and type the following, and save the file as \kode{script.jl} in some folder of your choice.
+%= lang: julia
+\begin{code}
+using JuMP, Gurobi
+m = Model(solver=GurobiSolver())
+
+@defVar(m, 0 <= x <= 2 )
+@defVar(m, 0 <= y <= 30 )
+
+@setObjective(m, Max, 5x + 3*y )
+
+@addConstraint(m, 1x + 5y <= 3.0 )
+
+print(m)
+
+status = solve(m)
+
+println("Objective value: ", getObjectiveValue(m))
+println("x = ", getValue(x))
+println("y = ", getValue(y))
+\end{code}
+
+If you are ineligible to use a free license of Gurobi, replace the first two lines by
+%= lang: julia
+\begin{code}
+using JuMP, Cbc
+m = Model(solver=CbcSolver())
+\end{code}
+
+
+
+\item \textbf{Step 8.} Press and hold your \kode{Shift} Key and right-click the folder name, and choose ``Open command window here.''
+
+\imagebox{images/introduction/windows/right_click.png}
+\imagebox{images/introduction/windows/right_click_cmd.png}
+
+
+\item \textbf{Step 9.} Type \kode{dir} to see your script file \kode{script.jl}.
+
+\imagebox{images/introduction/windows/dir.png}
+
+If you see a filename such as \kode{script.jl.txt}, use the following command to rename:
+%= lang: console
+\begin{code}
+ren script.jl.txt script.jl
+\end{code}
+
+\item \textbf{Step 10.} Type \kode{julia script.jl} to run your julia script.
+
+\imagebox{images/introduction/windows/run_script.png}
+
+After a few seconds, the result of your julia script will be printed. Done.
+
+\end{itemize}
+
+Please proceed to Section \ref{sec:running_julia}.
+
+
+
+
+
+
+
+
+
+
+\subsection{Installing Julia in Mac OS X} \label{sec:julia_mac}
+
+\begin{itemize}
+\item \textbf{Step 1.} Download Julia from \href{http://julialang.org/downloads/}{the official website}.\footnote{\url{http://julialang.org/downloads/}} (Select an appropriate OS X version.)
+
+\imagebox{images/introduction/mac/download.png}
+
+
+\item \textbf{Step 2.} In your download folder, double-click the downloaded .dmg file to mount it. Drag ``Julia-0.x.x.app'' file to the ``Applications'' folder.
+
+\imagebox{images/introduction/mac/drag_julia.png}
+
+
+
+\item \textbf{Step 3.} Open ``Terminal.app'' from your Applications folder. (If you don’t know how to open it, see \href{https://www.youtube.com/watch?v=zw7Nd67_aFw}{this video}.\footnote{\url{https://www.youtube.com/watch?v=zw7Nd67_aFw}} It is convenience to place ``Terminal.app'' in your dock.
+
+\imagebox{images/introduction/mac/terminal.png}
+
+
+
+\item \textbf{Step 4.} In your terminal, enter the following commands:
+%= lang: bash
+\begin{code}
+touch ~/.bash_profile
+open –e ~/.bash_profile
+\end{code}
+
+% \image{images/introduction/mac/bash_profile.jpg}
+% \image{images/introduction/mac/bash_profile.pdf}
+\image{images/introduction/mac/bash_profile.png}
+
+It will open a TextEdit window, enter the following line somewhere:
+%= lang: bash
+\begin{code}
+export PATH=/Applications/Julia-0.4.2.app/Contents/Resources/julia/bin/:$PATH
+\end{code}
+\noindent Change “0.4.2” to reflect your Julia version.
+
+\image{images/introduction/mac/export_path.png}
+
+Save the file and close the TextEdit window. In your terminal, enter the following command:
+
+%= lang: bash
+\begin{code}
+source ~/.bash_profile
+\end{code}
+
+
+\item \textbf{Step 5.} In your terminal, enter \kode{julia}.
+
+\image{images/introduction/mac/run_julia.png}
+
+
+\item \textbf{Step 6.} If you have not installed \gurobi{} in your system yet, go back and install it first. Then, on your Julia prompt, type
+%= lang: julia
+\begin{code}
+Pkg.add("JuMP")
+Pkg.add("Gurobi")
+\end{code}
+
+(If you are ineligible to use a free license of Gurobi, use the \kode{Cbc} solver: \kode{Pkg.add("Cbc")})
+
+\image{images/introduction/mac/install_jump_gurobi.png}
+
+
+\item \textbf{Step 7.} Open TextEdit (or any other text editor, for example \href{http://atom.io}{Atom}\footnote{\url{http://atom.io}}) and type the following, and save the file as \kode{script.jl} in some folder of your choice.
+
+%= lang: bash
+\begin{code}
+using JuMP, Gurobi
+m = Model(solver=GurobiSolver())
+
+@defVar(m, 0 <= x <= 2 )
+@defVar(m, 0 <= y <= 30 )
+
+@setObjective(m, Max, 5x + 3*y )
+
+@addConstraint(m, 1x + 5y <= 3.0 )
+
+print(m)
+status = solve(m)
+
+println("Objective value: ", getObjectiveValue(m))
+println("x = ", getValue(x))
+println("y = ", getValue(y))
+\end{code}
+
+If you are ineligible to use a free license of Gurobi, replace the first two lines by
+%= lang: julia
+\begin{code}
+using JuMP, Cbc
+m = Model(solver=CbcSolver())
+\end{code}
+
+
+\item \textbf{Step 8.} \href{http://osxdaily.com/2011/12/07/open-a-selected-finder-folder-in-a-new-terminal-window/}{Open a terminal window}\footnote{To do this, you can drag the folder to the Terminal.app icon in your dock, or see \url{http://osxdaily.com/2011/12/07/open-a-selected-finder-folder-in-a-new-terminal-window/}} at the folder that contains your \kode{script.jl}.
+
+\item \textbf{Step 9.} Type \kode{ls –al} to check your script file.
+
+\image{images/introduction/mac/ls-al.png}
+
+\item \textbf{Step 10.} Type \kode{julia script.jl} to run your script.
+
+\image{images/introduction/mac/run_script.png}
+
+
+After a few seconds, the result of your julia script will be printed. Done.
+
+\end{itemize}
+
+Please proceed to Section \ref{sec:running_julia}.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Running Julia Scripts} \label{sec:running_julia}
+When you are ready, there are basically two methods to run your Julia script:
+\begin{itemize}
+\item In your Command Prompt or Terminal, enter \kode{C:> julia your-script.jl}
+\item In your Julia prompt, enter \kode{julia> include("your-script.jl")}.
+\end{itemize}
+
+
+\subsection{Installing CPLEX}
+
+Instead of \gurobi{}, you can install and connect the \cplex{} solver, which is also free to academics. Installing \cplex{} is a little more complicated task.
+
+\subsubsection{CPLEX in Windows}
+You can follow this step by step guide to install:
+\begin{enumerate}
+\item Log in at \href{https://www-304.ibm.com/ibm/university/academic/pub/jsps/assetredirector.jsp?asset_id=1070}{the academic initiative page}\footnote{\url{https://www-304.ibm.com/ibm/university/academic/pub/jsps/assetredirector.jsp?asset_id=1070}} at the IBM website.
+\item Follow the instructions on the page.
+\item Download an appropriate version to your system:
+    \begin{itemize}
+        \item \kode{cplex\_studio126.win-x86-32.exe} for 32-bit systems
+        \item \kode{cplex\_studio126.win‐x86‐64.exe} for 64-bit systems.
+    \end{itemize}
+\item Reboot.
+\item Run the downloaded exe file You may need to right‐click the exe file and ``Run as Administrator.''
+\item Run \julia{} and add the \kode{CPLEX.jl} package:
+%= lang: julia
+\begin{code}
+julia> Pkg.add("CPLEX")
+\end{code}
+
+\item Ready. Test the following code:
+%= lang: julia
+\begin{code}
+using JuMP, CPLEX
+m = Model(solver=CplexSolver())
+@defVar(m, x <= 5)
+@defVar(m, y <= 45)
+@setObjective(m, Min, x + y)
+@addConstraint(m, 50x + 24y <= 2400)
+@addConstraint(m, 30x + 33y <= 2100)
+
+status = solve(m)
+println("Optimal objective: ",getObjectiveValue(m))
+println("x = ", getValue(x), " y = ", getValue(y))
+\end{code}
+\end{enumerate}
+
+
+\subsubsection{CPLEX in Mac OS X}
+
+The instruction includes how to deal with .bin file on Mac OS X:
+
+\begin{enumerate}
+\item Log in at \href{https://www-304.ibm.com/ibm/university/academic/pub/jsps/assetredirector.jsp?asset_id=1070}{the academic initiative page}\footnote{\url{https://www-304.ibm.com/ibm/university/academic/pub/jsps/assetredirector.jsp?asset_id=1070}} at the IBM website.
+\item Follow the instructions on the page.
+\item Download an appropriate version to your system: \kode{cplex\_studio126.osx.bin}.
+\item Place the file in your home directory: \kode{/Users/[Your User Name]}. Copying and pasting from the Download directory should work here.
+\item To install, open Terminal.
+\item At the prompt, type in
+%= lang: bash
+\begin{code}
+/bin/bash ~/cplex_studio126.osx.bin
+\end{code}
+\noindent and hit enter. Follow all the prompts.
+\end{enumerate}
+
+
+To add the \kode{CPLEX.jl} package to Julia, follow:
+\begin{enumerate}
+\item Open your \kode{\textasciitilde/.bash\_profile} file to edit:
+%= lang: console
+\begin{code}
+open -e ~/.bash_profile
+\end{code}
+\item  Add the following line to your \kode{\textasciitilde/.bash\_profile} file: (change [USER NAME])
+%= lang: bash
+\begin{code}
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/Users/[USER NAME]/Applications/
+  IBM/ILOG/CPLEX_Studio126/cplex/bin/x86-64_osx/"
+\end{code}
+\noindent Note that the above code needs to be a \emph{single} line.
+\item Reload your profile:
+%= lang: bash
+\begin{code}
+source ~/.bash_profile
+\end{code}
+
+\item Run \julia{} and add the \kode{CPLEX.jl} package:
+%= lang: julia
+\begin{code}
+julia> Pkg.add("CPLEX")
+\end{code}
+
+\item Ready. Test the following code:
+%= lang: julia
+\begin{code}
+using JuMP, CPLEX
+m = Model(solver=CplexSolver())
+@defVar(m, x <= 5)
+@defVar(m, y <= 45)
+@setObjective(m, Min, x + y)
+@addConstraint(m, 50x + 24y <= 2400)
+@addConstraint(m, 30x + 33y <= 2100)
+
+status = solve(m)
+println("Optimal objective: ",getObjectiveValue(m))
+println("x = ", getValue(x), " y = ", getValue(y))
+\end{code}
+\end{enumerate}
+
+
+
+
+\section{Installing IJulia} \label{sec:ijulia}
+
+As you have seen in Section \ref{sec:juliabox}, JuliaBox provides a nice interactive programming environment. You can also use such an interactive environment in your local computer. JuliaBox is based on \href{http://jupyter.org}{Jupyter Notebook}\footnote{\url{http://jupyter.org}}. Well, at first there was \kode{IPython} notebook that was an interactive programming environment for the Python language. It has been popular, and now it is extended to cover many other languages such as R, Julia, Ruby, etc. The extension became the Jupyter Notebook project. For Julia, it is called \kode{IJulia}, following the naming convention of \kode{IPython}.
+
+To use \kode{IJulia}, you need Python and Jupyter installed in you computer. The Anaconda Python is an easy-to-install distribution of Python and Jupyter (and many other python packages). In Section \ref{sec:plotting}, you will need to install the Anaconda Python anyway to use plotting.
+
+\begin{enumerate}
+\item Download and install \href{https://www.continuum.io/downloads}{the Anaconda Python 2.7} from \url{https://www.continuum.io/downloads}.
+\item Open a new terminal window and run Julia. Install \kode{IJulia}:
+%= lang: julia
+\begin{code}
+julia> Pkg.add("IJulia")
+\end{code}
+\item To open the \kode{IJulia} notebook in your web browser:
+%= lang: julia
+\begin{code}
+julia> using IJulia
+julia> notebook()
+\end{code}
+\end{enumerate}
+
+It will open a webpage in your browser that looks like the following screenshot:
+\image{images/introduction/ijulia/ijulia_home.png}
+
+\begin{figure}
+\image{images/introduction/ijulia/ijulia_new.png}
+\caption{Creating a new notebook\label{fig:ijulia_new}}
+\end{figure}
+
+\begin{figure}
+\image{images/introduction/ijulia/ijulia_basic.png}
+\caption{Some basic Julia codes.\label{fig:ijulia_basic}}
+\end{figure}
+
+
+The current folder will be your home folder. You can move to another folder and also create a new folder by clicking the ``New'' button on the top-right corner of the screen. After locating a folder you want, you can now create a new \kode{IJulia} notebook by clicking the ``New'' button again and select the julia version of yours, for example ``Julia 0.4.1''. See Figure \ref{fig:ijulia_new}.
+
+
+It will basically open an interactive session of the Julia Language. If you have used Mathematica or Maple, the interface will look familiar. You can test basic Julia commands. When you need to evaluate a block of codes, press \kode{Shift}+\kode{Enter}, or press the ``play'' button. See Figure \ref{fig:ijulia_basic}.
+
+\begin{figure}
+\image{images/introduction/ijulia/repl.png}
+\caption{This is the REPL.\label{fig:repl}}
+\end{figure}
+
+\begin{figure}
+\image{images/introduction/ijulia/ijulia_pyplot.png}
+\caption{Plotting in IJulia\label{fig:ijulia_pyplot}}
+\end{figure}
+
+
+If you properly install a plotting package like \kode{PyPlot.jl} (details in Section \ref{sec:pyplot}), you can also do plotting directly within the \kode{IJulia} notebook as shown in Figure \ref{fig:ijulia_pyplot}.
+
+
+Personally, I prefer the REPL for most tasks, but I occasionally use \kode{IJulia}, especially when I need to test some simple things and need to plot the result quickly, or when I need to share the result of Julia computation with someone else. (\kode{IJulia} can export the notebook in various formats, including HTML and PDF.)
+
+What is the REPL? It stands for read-eval-print loop. It is the Julia session that runs in your terminal; see Figure \ref{fig:repl}, which must look familiar to you already.
+
+
+
+
+
+
+
+\section{Package Management}
+
+There are many useful packages in \julia{} and we rely many parts of our computations on packages. If you have followed my instructions to install \julia{}, \jump{}, \gurobi{}, and \cplex{}, you have already installed a few packages. There are some more commands that are useful in managing packages.
+
+%= lang: julia
+\begin{code}
+julia> Pkg.add("PackageName")
+\end{code}
+\noindent This installs a package, named \kode{PackageName}. To find its online repository, you can just google the name \kode{PackageName.jl}, and you will be directed to a repository hosted at \kode{GitHub.com}.
+
+%= lang: julia
+\begin{code}
+julia> Pkg.rm("PackageName")
+\end{code}
+\noindent This removes the package.
+
+%= lang: julia
+\begin{code}
+julia> Pkg.update()
+\end{code}
+\noindent This updates all packages that are already installed in your machine to the most recent versions.
+
+%= lang: julia
+\begin{code}
+julia> Pkg.status()
+\end{code}
+\noindent This displays what packages are installed and what their versions are. If you just want to know the version of a specific package, you can do:
+%= lang: julia
+\begin{code}
+julia> Pkg.status("PackageName")
+\end{code}
+
+%= lang: julia
+\begin{code}
+julia> Pkg.build("PackageName")
+\end{code}
+\noindent Occassionally, installing a package will fail during the \kode{Pkg.add("PackageName")} process, usually because some libraries are not installed or system path variables are not configured correctly. Try to install some required libraries again and check the system path variables first. Then you may need to reboot your system or restart your \julia{} session. Then \kode{Pkg.build("PackageName")}. Since you have downloaded package files during \kode{Pkg.build("PackageName")}, you don't need to download them again; you just build it again.
+
+
+
+
+
+\section{Helpful Resources}
+
+Readers can find codes and other helpful resources in the author's website at
+\begin{center}
+\url{http://www.chkwon.net/julia}
+\end{center}
+which also includes a link to a Facebook page of this book for discussion and communication.
+
+This book does \emph{not} teach everything of the Julia Language---only a very small part of it. When you want to learn more about the language, the first place you need to visit is
+\begin{center}
+\url{http://julialang.org/learning/}
+\end{center}
+where many helpful books, tutorials, videos, and articles are listed. Also, you will need to visit the official documentation of the Julia Language at
+\begin{center}
+\url{http://docs.julialang.org/}
+\end{center}
+which I think serves as a good tutorial as well.
+
+When you have a question, there will be many Julia enthusiasts ready for you. Relevant mailing lists are
+\begin{itemize}
+\item \href{https://groups.google.com/forum/#!forum/julia-users}{\kode{julia-users}}\footnote{\url{https://groups.google.com/forum/#!forum/julia-users}}: Any general questions about the Julia Language.
+\item \href{https://groups.google.com/forum/#!forum/julia-opt}{\kode{julia-opt}}\footnote{\url{https://groups.google.com/forum/#!forum/julia-opt}}
+: Questions about mathematical optimization.
+\item \href{https://groups.google.com/forum/#!forum/julia-stats}{\kode{julia-stats}}\footnote{\url{https://groups.google.com/forum/#!forum/julia-stats}}: Questions about statistical methods.
+\end{itemize}
+You can also ask questions at \url{http://stackoverflow.com} with tag \kode{julia-lang}.
+
+The webpage of JuliaOpt is worth visiting. JuliaOpt is a group of people who develop and use optimization related packages in the Julia Language. The website provides a nice overview of the available packages and well-tailored examples. The website is
+\begin{center}
+\url{http://www.juliaopt.org}
+\end{center}

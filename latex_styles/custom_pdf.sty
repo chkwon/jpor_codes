@@ -1,0 +1,84 @@
+% You should use this file to define commands that *only* pertain to the PDF.
+% Otherwise, use `custom.sty`.
+% For example, you can define the proper hypenation of any words that LaTeX
+% can't hyphenate natively.
+% \hyphenation{Ja-va-Script}
+% You can also include and use packages.
+% \usepackage{newunicodechar}
+% \newunicodechar{★}{\ensuremath{\star}}
+% \newunicodechar{ž}{\v{z}}
+
+\usepackage{microtype}
+
+\allowdisplaybreaks
+
+\renewcommand{\image}[1]{\begin{center}\includegraphics[width=\maxwidth{0.70\textwidth}]{#1}\end{center}}
+\renewcommand{\imagebox}[1]{\begin{center}\fbox{\includegraphics[width=\maxwidth{0.70\textwidth}]{#1}}\end{center}}
+
+
+\def\do@url@hyp{\do\-} % allow breaks after hyphens
+
+
+\renewcommand{\kode}[1]{{\normalsize\texttt{#1}}}
+
+\DefineVerbatimEnvironment%
+  {code}{Verbatim}{fontsize=\relsize{-1},fontseries=b}
+
+
+%\usepackage{listings}
+%\lstset{
+%	basicstyle=\ttfamily\bfseries,
+%	breaklines=true}
+%\lstnewenvironment{wrapcode}{}{}
+
+
+\def\verbatim@font{\ttfamily\normalsize\bfseries}
+
+
+\renewcommand{\rmdefault}{cmr}
+\renewcommand{\sfdefault}{cmss}
+\renewcommand{\ttdefault}{cmtt}
+
+
+
+
+%\setlength{\oddsidemargin}{0in}
+%\setlength{\evensidemargin}{0in}
+%\setlength{\topmargin}{0in}
+
+\setlength{\paperwidth}{7.5in}
+\setlength{\paperheight}{9.25in}
+%\setlength{\textwidth}{5.5in}
+%\setlength{\textheight}{7.0in}
+
+%\setlength{\headheight}{13.6pt}
+
+% \usepackage[showframe, top=1in, left=1in, right=1in, bottom=1in, headheight=13.6pt]{geometry}
+\usepackage[top=1.3in, left=1in, right=1in, bottom=1.3in, headheight=13.6pt]{geometry}
+
+
+%7.5 x 9.25
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\fancyfoot{}
+\fancyfoot[LE,RO]{\thepage}
+
+\fancyhead{}
+\fancyhead[LE]{\nouppercase{\rightmark}}
+\fancyhead[RO]{\nouppercase{\leftmark}}
+
+
+%Options: Sonny, Lenny, Glenn, Conny, Rejne, Bjarne, Bjornstrup
+\usepackage[Bjornstrup]{fncychap}
+% \ChNameVar{\centering\Huge\sc\bfseries}
+% \ChNumVar{\Huge}
+% \ChTitleVar{\centering\Huge\sc}
+% \ChNameUpperCase
+% \ChTitleAsIs
+% \ChRuleWidth{1pt}
+
+
+%\usepackage{titlesec}
+%\titleformat{\section}{\Large\bf\sf}{\thesection\quad}{0pt}{}

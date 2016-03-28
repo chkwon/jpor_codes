@@ -1,0 +1,166 @@
+\chapter{Parameters in Optimization Solvers}
+
+In this chapter, we study how we can set parameters for optimization solvers, in particular \cplex{} and \gurobi{}.
+
+\section{Setting CPU Time Limit}
+Mixed Integer Linear Optimization (MILP) problems are popular in practical and research problems. When solvers take particularly long time, one may wish to limit the CPU time. This is useful when we develop a fast heuristic algorithm and want to compare its performance with \cplex{} or \gurobi{}. For example, run \cplex{} or \gurobi{} for 24 hours and compare the solution qualities.
+
+\noindent For \cplex{}:
+%= lang: julia
+\begin{code}
+using JuMP, CPLEX
+m = Model(solver=CplexSolver(CPX_PARAM_TILIM=86400))
+\end{code}
+\noindent For \gurobi{}:
+%= lang: julia
+\begin{code}
+using JuMP, Gurobi
+m = Model(solver=GurobiSolver(TimeLimit=86400))
+\end{code}
+
+Note that 86400 seconds are 24 hours.
+
+\section{Setting the Optimality Gap Tolerance}
+Another way to limit the time spent on solving MILP problems is to set the optimality gap tolerance. The optimality gap is measured by the difference between the best lower and upper bounds. There are two types of differences: absolute gap and relative gap.
+\[
+	\text{(absolute gap)} = \text{(upper bound)} - \text{(lower bound)}
+\]
+and
+\[
+	\text{(relative gap)} = \frac{ \text{(upper bound)} - \text{(lower bound)} }{\text{(upper bound)} + 10^{-10}}
+\]
+in case of minimization. The constant $10^{-10}$ is added just to avoid dividing by zero. The solver will stop when the gap becomes less than the tolerance.
+
+\noindent For \cplex{}:
+%= lang: julia
+\begin{code}
+using JuMP, CPLEX
+m = Model(solver=CplexSolver(CPX_PARAM_EPAGAP=1e-1)) # absolute gap
+m = Model(solver=CplexSolver(CPX_PARAM_EPGAP=1e-2))  # relative gap
+\end{code}
+\noindent For \gurobi{}:
+%= lang: julia
+\begin{code}
+using JuMP, Gurobi
+m = Model(solver=GurobiSolver(MIPGapAbs=1e-1)) # absolute gap
+m = Model(solver=GurobiSolver(MIPGap=1e-2))    # relative gap
+\end{code}
+
+One may also combine the CPU time limit with the optimality gap tolerance as follows:
+%= lang: julia
+\begin{code}
+using JuMP, CPLEX
+m = Model(solver=CplexSolver(CPX_PARAM_TILIM=86400,CPX_PARAM_EPGAP=1e-2))
+\end{code}
+\noindent which terminates the solver after 24 hours of computing or when the relative gap is less than 1\%.
+
+
+
+\section{Warmstart}
+When solving MILP problems, we can provide initial solutions to start with. If the quality of the initial solutions are good, then we may be able to reduce the computational time significantly. This is useful when we have relatively good solutions on hand either produced by a heuristic algorith, or generated in a previous iteration.
+
+We use the \kode{setValue} function:
+%= lang: julia
+\begin{code}
+using Gurobi
+m = Model(solver=GurobiSolver())
+@defVar(m, x[1:10] >= 0)
+
+init_x = [3, 4, 2, 5, 3, 2, 1, 6, 8, 1]
+for i in 1:10
+    setValue(x[i], init_x[i])
+end
+\end{code}
+\noindent We don't need to supply initial solutions to all variables. We can provide initial solutions for some variables only; optimization solvers will guess other solutions by themselves. Well, although solvers can guess unspecified initial values, it is always almost best to ``guess'' by yourself. If you know of only part of a good solution, try first to find the entire solution and provide it to the solver.
+
+
+
+\section{Big $M$ and Integrality Tolerance}
+
+Big $M$ has been popularly used for linearization of nonlinear terms---especially bilinear terms---in mixed integer optimization problems. While techniques with big $M$ are practically useful, we need to address an important question: How big is big and how big should it be?
+
+Suppose $x$ is a binary variable and $y$ is a nonnegative continuous variable. Consider a bilinear term $xy$, which may be linearized with an additional variable $w=xy$ as follows:
+\begin{align*}
+	w &\geq 0 \\
+	w &\leq M x \\
+	w &\leq y \\
+	w &\geq y + M(x-1)
+\end{align*}
+Let's check if the above is corret. When $x=0$, we have:
+\begin{align*}
+	w &\geq 0 \\
+	w &\leq 0 \\
+	w &\leq y \\
+	w &\geq y - M
+\end{align*}
+The above four inequalities guarnatee that $w=0$ as long as $y-M\leq 0$. When $x=1$, we have:
+\begin{align*}
+	w &\geq 0 \\
+	w &\leq M \\
+	w &\leq y \\
+	w &\geq y
+\end{align*}
+In this case, we have $w=y$ if, again, $M \geq y$.
+
+One ``little'' problem here is that we do not know the value of $y$ in advance. Often there are two choices:
+\begin{enumerate}
+\item We find an upper bound on $y$, and set $M$ as the upper bound.
+\item We set $M$ as an arbitrarily big number.
+\end{enumerate}
+If the first approach, called `bounding big $M$', is possible, it's the best. Try to find the smallest upper bound. When we use the second approach, we simply don't know how big it should be; hence often come up with a very big number.
+
+What's wrong with a very big number? Well, a critical problem exists with the term $M(1-x)$. Optimization solvers such as \gurobi{} and \cplex{} find binary solutions with some numerical computation and think that a number is 1 if it is close enough to 1.0. That means, 0.999999984 can be 1 within optimization solvers. Then, if $M$ is as big as 1000000000, then the term $M(1-x)$ becomes 16, while it should be zero. Well, in my Julia, it is not even 16.
+%= lang: console
+\begin{code}
+julia> 1000000000*(1-0.999999984)
+15.999999991578306
+\end{code}
+
+One remedy for this issue can be adjusting the itegrality tolerance of optimization solvers. Both in \cplex{} and \gurobi{}, it is $10^{-5}$ by default. One may wish to set a smaller value for it; for example $10^{-9}$. For \cplex{}:
+%= lang: julia
+\begin{code}
+using CPLEX
+m = Model(solver=CplexSolver(CPX_PARAM_EPINT=1e-9))
+\end{code}
+\noindent For \gurobi{}:
+%= lang: julia
+\begin{code}
+using Gurobi
+m = Model(solver=GurobiSolver(IntFeasTol=1e-9))
+\end{code}
+
+With a smaller integrality tolerance, the computation will obviously be slower. Also note that the integrality tolerance issue is not the only problem that big $M$ creates. So, try to make big $M$ small---but not too small.
+
+
+
+
+\section{Turning off the Solver Output}
+
+\cplex{} and \gurobi{} by default display many useful outputs while solving optimization problems, mostly useful but sometimes unnecessary. When you would like to turn output displays off, use the following codes:
+%= lang: julia
+\begin{code}
+using CPLEX
+m = Model(solver=CplexSolver(CPX_PARAM_SCRIND=0))
+\end{code}
+\noindent For \gurobi{}:
+%= lang: julia
+\begin{code}
+using Gurobi
+m = Model(solver=GurobiSolver(OutputFlag=0))
+\end{code}
+
+
+
+
+\section{Other Solver Parameters}
+
+In addition to the CPU time limit, integrality tolerance, and solver output options, there are many other parameter values that we can control. For the full lists of parameters, visit the following links:
+
+\begin{itemize}
+\item \href{http://www-01.ibm.com/support/knowledgecenter/SSSA5P_12.4.0/ilog.odms.cplex.help/CPLEX/Parameters_reference/topics/introListTopical.html?lang=en}{CPLEX: topical list of parameters}\footnote{Visit \url{https://www.ibm.com/support/knowledgecenter} and search by ``Topical list of parameters.''} --- \julia{} uses parameter names for \texttt{C}.
+\item \href{http://www.gurobi.com/documentation/6.0/refman/parameters.html}{Gurobi: Parameters}\footnote{\url{http://www.gurobi.com/documentation/6.0/refman/parameters.html}}
+\end{itemize}
+
+
+
+

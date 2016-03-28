@@ -1,0 +1,16 @@
+cover
+frontmatter:
+maketitle
+tableofcontents
+preface.md
+mainmatter:
+introduction.tex
+simple.tex
+basics.tex
+numerical.tex
+network.tex
+optimization.tex
+montecarlo.tex
+lagrangian.tex
+solvers.tex
+others.tex

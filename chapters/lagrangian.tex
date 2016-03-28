@@ -1,0 +1,773 @@
+\chapter{Lagrangian Relaxation}
+
+Computational methods based on Lagrangian relaxation have been popularly used for solving many optimization problems, especially for mixed integer linear programming problems and combinatorial optimization problems. The key idea behind the algorithm is typically that we relax hard constraints to make the relaxed problems relatively easier to solve. While we solve these easy problems multiple times, we update the values of Lagrangian multipliers adequately.
+
+In this chapter, I'll briefly introduce how methods based on Lagrangian relaxation work and present a few applications with \julia{} codes.
+
+
+
+\section{Introduction}
+
+An excellent introduction the Lagrangian relaxation method is provided by Fisher (2004)\footnote{Fisher, M.L., 2004. The Lagrangian relaxation method for solving integer programming problems. Management science, 50(12\_supplement), pp.1861-1871.}. This section briefly summarizes the method.
+
+Consider an integer programming problem:
+\begin{equation}
+\qquad Z^* = \min \ \vect{c}^\top \vect{x}
+\end{equation}
+subject to
+\begin{align*}
+\mat{A} \vect{x} &= \vect{b} \\
+\mat{D} \vect{x} &\leq \vect{e} \\
+\vect{x} & \geq 0, \text{ Integer}.
+\end{align*}
+
+Let $\vect{\lambda}$ denote the dual variable for the first equality constraint. By relaxing the first constraint, we formulate the Lagrangian problem
+\begin{equation}
+\qquad Z_D(\vect{\lambda}) = \min \ \vect{c}^\top \vect{x} + \vect{\lambda}^\top(\mat{A}\vect{x}-\vect{b})
+\end{equation}
+subject to
+\begin{align*}
+\mat{D} \vect{x} &\leq \vect{e} \\
+\vect{x} & \geq 0, \text{ Integer}.
+\end{align*}
+The Lagrangian problem is relatively easier to solve than the original problem.
+
+A brief structure of the Lagrangian relaxation method can be described as follows:
+\begin{itemize}
+\item \textbf{Step 0:} Guess an initial value of $\vect{\lambda}^0$.
+\item \textbf{Step 1:} Given the current value of $\vect{\lambda}^k$, solve the Lagrangian problem and obtain  $Z_D(\vect{\lambda}^k)$. Let the solution to the Lagrangian problem $\vect{x}_D^k$, which is likely infeasible to the original problem.
+\item \textbf{Step 2:} Given the current values of $\vect{\lambda}^k$ and $\vect{x}_D^k$, obtain a feasible solution $\vect{x}^k$, \emph{somehow}.
+\item \textbf{Step 3:} Update $\vect{\lambda}^k$ to $\vect{\lambda}^{k+1}$, \emph{somehow}, and repeat.
+\end{itemize}
+There are two \emph{somehow}'s in the above procedure. I'll explain each \emph{somehow}.
+
+\subsection{Lower and Upper Bounds}
+
+By solving the original problem, we aim to compute the optimal objective function value $Z^*$, which is unknown at this moment. Our goal is to bound this unknown optimal objective function value both from below and above. That is, we want to obtain lower bound $Z_{\text{LB}}$ and upper bound $Z_{\text{UB}}$ such that
+\[
+Z_{\text{LB}} \leq Z^* \leq Z_{\text{UB}}
+\]
+We become confident that we obtained an optimal solution when $Z_{\text{UB}}=Z_{\text{LB}}$. The difference between these two bounds is called the optimality gap, and typically calculated by the following percentage:
+\[
+\text{Optimality Gap} = \frac{ Z_{\text{UB}}-Z_{\text{LB}} } { Z_{\text{UB}} } \times 100 \%
+\]
+
+In Lagrangian relaxation methods described earlier, it is well known that
+\[
+	Z_D(\vect{\lambda}) \leq Z^*
+\]
+for all $\vect{\lambda}\geq\vect{0}$. Therefore, the relaxed Lagrangian problem provides lower-bounds. We want the lower bounds are close to the optimal $Z^*$. To do so, we need to make a good choice of $\vect{\lambda}$. This is done by updating $\vect{\lambda}^k$ wisely. I'll explain this in the next section.
+
+We can consider another relaxation, called LP relaxation in the following form:
+\begin{equation*}
+\qquad Z_{\text{LP}} = \min \ \vect{c}^\top \vect{x}
+\end{equation*}
+subject to
+\begin{align*}
+\mat{A} \vect{x} &= \vect{b} \\
+\mat{D} \vect{x} &\leq \vect{e} \\
+\vect{x} & \geq 0
+\end{align*}
+where we just eliminate the integrality condition. The LP relaxation also provides an lower bound:
+\[
+	Z_{\text{LP}} \leq Z^*
+\]
+which is usually not very good; i.e. not close enough to $Z^*$.
+
+To find an upper bound, we just need to find a feasible solution to the original problem, since
+\[
+	Z^* \leq \vect{c}^\top \vect{x}
+\]
+for any feasible $\vect{x}$ by the definition of $Z^*$. The real question is how to find a \emph{good} upper bound---as close as possible to the optimal solution. A possible approach is to use the solution to the Lagrangian problem. When we solve the Lagrangian problem given the multiplier $\vect{\lambda}^k$, we obtain a solution $\vect{x}_D^k$, which is infeasible; otherwise we find an optimal solution. One may fix some variables at the value of $\vect{x}_D^k$ and then modify other variables to create a feasible solution $\vect{x}^k$, or apply some heuristic algorithms to the original problem starting from the Lagrangian solution $\vect{x}_D^k$ to obtain a feasible solution $\vect{x}^k$. This requires developments of methods that are specific to the application on the table.
+
+
+\subsection{Subgradient Optimization}
+
+When updating $\vect{\lambda}^k$, we basically want to maximize the lower bound. That is we solve
+\[
+	\max_{\vect{\lambda}\geq\vect{0}} L_D(\vect{\lambda})
+\]
+To solve this problem, we use a subgradient optimization method. The updating scheme is
+\[
+	\vect{\lambda}^{k+1} = \max\bigg\{ \vect{\lambda}^k + t_k (\mat{A}\vect{x}_D^k - \vect{b} ), 0 \bigg\}
+\]
+where $t_k>0$ is a step size and the $\max$ operator is taken for each element; that is, if any element of $\vect{\lambda}^k + t_k (\mat{A}\vect{x}_D^k - \vect{b})$ is negative, simply make it zero, so that $\vect{\lambda}^{k+1}\geq \vect{0}$. The most popular choice of the step size is
+\[
+	t_k = \frac{ \theta_k ( Z_\text{UB} - Z_D(\vect{\lambda}^k) ) }
+			   {  || \mat{A}\vect{x}_D^k - b ||^2 }
+\]
+where $Z_\text{UB}$ is the best-known---smallest---upper bound and $\theta_k\in(0,2]$ is a scalar. Some uses a fixed $\lambda$ at all iterations, while some uses a varying $\lambda$ in each iteration depending on the progress of the algorithm.
+
+
+\subsection{Summary}
+
+In developing a Lagrangian relaxation method, we need to make three decisions:
+\begin{enumerate}
+\item Which constraints to be relaxed,
+\item How to obtain a feasible solution and obtain an upper bound, and
+\item How to update the Lagrangian multiplier.
+\end{enumerate}
+The first decision on selecting constraints to be relaxed impacts the overall computational difficulties and the solution quality. Depending on the choice of constraints, the Lagrangian problem may be very easy to solve, or remain to be challenging. All of the above three decisions should be specific to the particular application of interest.
+
+
+
+%
+%
+%
+%
+\section{The $p$-Median Problem}
+
+In this section, we apply the Lagrangian relaxation method to solve a facility location problem, called the $p$-median problem and how we can write a \julia{} code. A compact introduction to the subject is provided by Daskin and Maass (2015)\footnote{Daskin, M.S. and Maass, K.L., 2015. The $p$-median problem. In Location Science (pp. 21-45). Springer International Publishing. \url{http://doi.org/10.1007/978-3-319-13111-5_2}}.
+
+Suppose there are $n$ customers who are geographically apart. We want to determine the locations of $p$ number of facilities to serve these customers. Each facility is assumed to have infinite service capacity. That is, we can simply assign each customer to exactly one facility. Our objective is to minimize the weighted sum of transportation cost to serve all customers.
+
+We first define some sets:
+\begin{itemize}
+\item $\Ic = \{1,...,m\}$: the set of candidate locations for facilities
+\item $\Jc = \{1,...,n\}$: the set of customer locations
+\end{itemize}
+and some parameters:
+\begin{itemize}
+\item $p$: the number of facilities to introduce
+\item $d_j$: the size of demand at customer $j\in\Jc$
+\item $c_{ij}$: the transportation cost from facility location $i\in\Ic$ to the customer location $j\in\Jc$
+\end{itemize}
+We now introduce variables:
+\begin{itemize}
+\item $x_{ij}$: the fraction of demand from customer $j\in\Jc$ is served by facility location $i\in\Ic$
+\item $y_i$: location variable with $y_i=1$ if a facility is introduced at candidate location $i\in\Ic$ and $y_i=0$ otherwise.
+\end{itemize}
+
+The $p$-median problem can be formulated as follows:
+\[
+	Z^* = \min \quad \sum_{i\in\Ic} \sum_{j\in\Jc} d_j c_{ij} x_{ij}
+\]
+subject to
+\begin{align*}
+	\sum_{i\in\Ic} x_{ij} = 1 & \qquad \forall j\in\Jc \\
+	\sum_{i\in\Ic} y_i = p & \\
+	x_{ij} \leq y_i & \qquad \forall i\in\Ic, j\in\Jc \\
+	y_i \in \{0,1\} & \qquad \forall i\in\Ic \\
+	x_{ij} \geq 0 & \qquad \forall i\in\Ic, j\in\Jc
+\end{align*}
+While this may be solved well by CPLEX and Gurobi for smaller networks, it takes too much time for larger problems; in general the $p$-median problem is NP-hard. Let's first solve a small instance optimally.
+
+
+
+\subsection{Reading the Data File}
+We need to prepare the two sets $\Ic$ and $\Jc$ and three parameters $p$, $\vect{d}$ and $\mat{c}$. As a small example, we consider 10 customers and 7 candidate locations. As explained in Section \ref{sec:file_io}, we will use \kode{.csv} files to prepare data and read them into \julia.
+
+The demand data file \kode{demand.csv} should look like:
+%= lang: text
+\begin{code}
+demand
+10
+6
+20
+32
+15
+28
+3
+19
+8
+13
+\end{code}
+The transportation cost $\mat{c}$ in the table form may be:
+
+\begin{center}
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|r|}
+\hline
+    &    C1 & C2 & C3 & C4 & C5 &    C6 & C7 & C8 & C9 & C10  \\
+\hline
+L1  &    10 &  7 & 11 & 12 & 32 &    15 & 20 & 26 &  4 &  41  \\
+L2  &    13 & 17 & 31 & 37 & 21 &     5 & 13 & 15 & 14 &  12  \\
+L3  &     4 & 13 & 14 & 22 &  8 &    31 & 26 & 11 & 12 &  23  \\
+L4  &    21 & 21 & 13 & 18 &  9 &    27 & 11 & 16 & 26 &  32  \\
+L5  &    32 & 18 & 11 & 14 & 11 &    11 & 16 & 32 & 34 &   8  \\
+L6  &    15 &  9 & 13 & 12 & 14 &    15 & 32 &  8 & 12 &   9  \\
+L7  &    28 & 32 & 15 &  2 & 17 &    12 &  9 &  6 & 11 &   6  \\
+\hline
+\end{tabular}
+\end{center}
+
+In the above table `C1' means customer 1 and `L1' means candidate location 1. The corresponding \kode{cost.csv} file should look like:
+%= lang: text
+\begin{code}
+,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10
+L1,10,7,11,12,32,15,20,26,4,41
+L2,13,17,31,37,21,5,13,15,14,12
+L3,4,13,14,22,8,31,26,11,12,23
+L4,21,21,13,18,9,27,11,16,26,32
+L5,32,18,11,14,11,11,16,32,34,8
+L6,15,9,13,12,14,15,32,8,12,9
+L7,28,32,15,2,17,12,9,6,11,6
+\end{code}
+
+Read the \kode{.csv} files and put them in arrays:
+%= lang: julia
+\begin{code}
+d, header = readcsv("demand.csv",  header=true)
+data = readcsv("cost.csv")
+cc = data[2:end, 2:end]
+c = convert(Array{Float64,2}, cc)
+\end{code}
+\noindent Note in the intermediate form \kode{cc} is of \kode{Array\{Any,2\}} type:
+%= lang: julia
+\begin{code}
+julia> typeof(cc)
+Array{Any,2}
+\end{code}
+\noindent It is \kode{Any}, because \kode{data} has text strings and numbers mixed together. To use it with other mathematical functions that deal with numerical data, we convert it to \kode{Array\{Float64,2\}}, which is a two-dimensional array of \kode{Float64} type:
+%= lang: julia
+\begin{code}
+julia> c = convert(Array{Float64,2}, cc)
+7x10 Array{Float64,2}:
+ 10.0   7.0  11.0  12.0  32.0  15.0  20.0  26.0   4.0  41.0
+ 13.0  17.0  31.0  37.0  21.0   5.0  13.0  15.0  14.0  12.0
+  4.0  13.0  14.0  22.0   8.0  31.0  26.0  11.0  12.0  23.0
+ 21.0  21.0  13.0  18.0   9.0  27.0  11.0  16.0  26.0  32.0
+ 32.0  18.0  11.0  14.0  11.0  11.0  16.0  32.0  34.0   8.0
+ 15.0   9.0  13.0  12.0  14.0  15.0  32.0   8.0  12.0   9.0
+ 28.0  32.0  15.0   2.0  17.0  12.0   9.0   6.0  11.0   6.0
+\end{code}
+\noindent We now have the \kode{d} vector and the \kode{c} matrix ready.
+
+Just as a small error-check, we see if the length of \kode{d} and the number of columns in \kode{c} match:
+%= lang: julia
+\begin{code}
+@assert length(d) == size(c,2)
+\end{code}
+\noindent The \kode{@assert} macro is useful for this purpose. It tests the given statement and produces an error if the given statement is \kode{false}. If the given statement is \kode{true}, it just does nothing and proceeds to the next line of the code.
+
+Then we create ranges for the two sets $\Ic$ and $\Jc$:
+%= lang: julia
+\begin{code}
+locations = 1:size(c,1) # the set, I
+customers = 1:length(d) # the set, J
+\end{code}
+
+
+
+\subsection{Solving the $p$-Median Problem Optimally}
+
+We will create a \julia{} function that solves the $p$-median problem optimally for a given $p$ and returns the optimal solution. We will use the \jump{} and \gurobi{} packages. The function is named \kode{optimal(p)} and looks like the following:
+%= lang: julia
+\begin{code}
+function optimal(p)
+    m = Model(solver=GurobiSolver())
+
+    @defVar(m, x[i in locations, j in customers] >= 0)
+    @defVar(m, y[i in locations], Bin)
+
+    @setObjective(m, Min, sum{ d[j]*c[i,j]*x[i,j],
+                                 i in locations, j in customers} )
+
+    for j in customers
+        @addConstraint(m, sum{ x[i,j], i in locations} == 1)
+    end
+
+    @addConstraint(m, sum{ y[i], i in locations} == p)
+
+    for i in locations
+        for j in customers
+            @addConstraint(m, x[i,j] <= y[i] )
+        end
+    end
+
+    solve(m)
+
+    Z_opt = getObjectiveValue(m)
+    x_opt = getValue(x)
+    y_opt = getValue(y)
+
+    return Z_opt, x_opt, y_opt
+end
+\end{code}
+\noindent I believe the above code is easy to understand; if not you may want to read previous chapters again, especially Chapter \ref{chap:simple}.
+
+
+
+
+
+
+
+\subsection{Lagrangian Relaxation}
+To apply the Lagrangian relaxation method, we relax the first constraint that enforces the total assignment for each demand is 100\% and obtain the following Lagrangian problem:
+\begin{align*}
+	Z_D(\vect{\lambda}) &= \min \quad \sum_{i\in\Ic} \sum_{j\in\Jc} d_j c_{ij} x_{ij}
+							+ \sum_{j\in\Jc} \lambda_j \bigg(1 - \sum_{i\in\Ic} x_{ij} \bigg) \\
+ &= \min \quad \sum_{i\in\Ic} \sum_{j\in\Jc} ( d_j c_{ij} - \lambda_j ) x_{ij}
+			+ \sum_{j\in\Jc} \lambda_j  \\
+\end{align*}
+subject to
+\begin{align*}
+	\sum_{i\in\Ic} y_i = p & \\
+	x_{ij} \leq y_i & \qquad \forall i\in\Ic, j\in\Jc \\
+	y_i \in \{0,1\} & \qquad \forall i\in\Ic \\
+	x_{ij} \geq 0 & \qquad \forall i\in\Ic, j\in\Jc
+\end{align*}
+
+
+
+
+\subsection{Finding Lower Bounds}
+The above Lagrangian problem has a special structure that makes it easy to solve. Due to the relaxation, we don't necessarily need to assign all demands. The following simple procedure finds an optimal solution to the Lagrangian problem for any given $\vect{\lambda}$:
+\begin{enumerate}
+\item \textbf{Step 1:} For all $i\in\Ic$, compute $v_i = \sum_{j\in\Jc} \min \{ 0, d_j c_{ij} - \lambda_j \}$.
+\item \textbf{Step 2:} Sort candidate locations by the value of $v_i$, and select the $p$ most negative $v_i$ values. (Ties can be broken arbitrarily.)
+\item \textbf{Step 3:} Set $y_i=1$ for the chosen candidate locations.
+\item \textbf{Step 4:} Set $x_{ij}=1$ if $y_i=1$ and $d_j c_{ij} - \lambda_j<0$.
+\end{enumerate}
+Note that solving the Lagrangian problem and finding lower bounds do not even require solving an optimization problem; we just need to sort some values.
+
+Step 1 is straightforward. We first declare \kode{y} as an array of type \kode{Float64} and the same size as \kode{locations}. Then we compute as indicated in Step 1 and assign values.
+%= lang: julia
+\begin{code}
+v = Array(Float64, size(locations))
+for i in locations
+    v[i] = 0
+    for j in customers
+        v[i] = v[i] + min(0, d[j]*c[i,j] - lambda[j] )
+    end
+end
+\end{code}
+\noindent One may rewrite the above code with a fewer lines with some vectorization, but the above is just easy to understand. It is anyway faster with for-loops without vectorization in \julia{}. In MATLAB, vectorization is always much faster than for-loops.
+
+In Step 2, to select the $p$ most negative $v_i$ values, we will use a sorting function, namely \kode{sortperm}, which returns the ordered array index, rather than the sorted values themselves.
+%= lang: julia
+\begin{code}
+idx = sortperm(v)
+\end{code}
+\noindent For example, \kode{v} has the following values:
+%= lang: julia
+\begin{code}
+julia> v
+7-element Array{Float64,1}:
+  -8.0
+  -1.0
+   0.0
+  -7.0
+   0.0
+   0.0
+ -13.0
+\end{code}
+\noindent If we want to choose the $p=3$ most negative values, we have to choose \kode{v[7]}, \kode{v[1]}, and \kode{v[4]}. The result of \kode{sortperm(v)} is:
+%= lang: julia
+\begin{code}
+julia> sortperm(v)
+7-element Array{Int64,1}:
+ 7
+ 1
+ 4
+ 2
+ 3
+ 5
+ 6
+\end{code}
+\noindent We are interested in the first three values of \kode{sortperm(v)}, which are 7, 1, and 4. There are many different functions are prepared for our convenience. See the \href{http://docs.julialang.org/en/stable/stdlib/sort/}{official documentation on functions related to sorting}\footnote{\url{http://docs.julialang.org/en/stable/stdlib/sort/}}.
+
+In Step 3, we first prepare a zero vector and let $y_i=1$ for those chosen locations $i$ in Step2:
+%= lang: julia
+\begin{code}
+y = zeros(Int, size(locations))
+y[idx[1:p]] = 1
+\end{code}
+\noindent In the above example \kode{idx[1:p]} has the following values:
+%= lang: julia
+\begin{code}
+julia> idx[1:p]
+3-element Array{Int64,1}:
+ 7
+ 1
+ 4
+\end{code}
+\noindent The resulting \kode{y} array looks like:
+%= lang: julia
+\begin{code}
+julia> y
+7-element Array{Int64,1}:
+ 1
+ 0
+ 0
+ 1
+ 0
+ 0
+ 1
+\end{code}
+\noindent which is exactly what we wanted.
+
+In Step 4, based on the value stored in the \kode{y} array, we determine the value of \kode{x}.
+%= lang: julia
+\begin{code}
+x = zeros(Int, length(locations), length(customers))
+for i in locations
+    for j in customers
+        if y[i]==1 && d[j]*c[i,j]-lambda[j]<0
+            x[i,j] = 1
+        end
+    end
+end
+\end{code}
+\noindent In the above code, the symbol \kode{\&\&} means `and'. When both of the two statements are true, the line with \kode{x[i,j] = 1} is executed.
+
+We also need to compute the value of $Z_D(\vect{\lambda})$:
+%= lang: julia
+\begin{code}
+Z_D = 0.0
+for j in customers
+    Z_D = Z_D + lambda[j]
+    for i in locations
+        Z_D = Z_D + d[j]*c[i,j]*x[i,j] - lambda[j]*x[i,j]
+    end
+end
+\end{code}
+\noindent which is essentially identical to
+\[
+Z_D(\vect{\lambda}) = \min \quad \sum_{i\in\Ic} \sum_{j\in\Jc} d_j c_{ij} x_{ij}
+							+ \sum_{j\in\Jc} \lambda_j \bigg(1 - \sum_{i\in\Ic} x_{ij} \bigg)
+\]
+
+The complete code for finding an lower bound is prepared as a function:
+%= lang: julia
+\begin{code}
+function lower_bound(lambda, p)
+    # Step 1: Computing v
+    v = Array(Float64, size(locations))
+    for i in locations
+        v[i] = 0
+        for j in customers
+            v[i] = v[i] + min(0, d[j]*c[i,j] - lambda[j] )
+        end
+    end
+
+    # Step 2: Sorting v from the most negative to zero
+    idx = sortperm(v)
+
+    # Step 3: Determine y
+    y = zeros(Int, size(locations))
+    y[idx[1:p]] = 1
+
+    # Step 4: Determine x
+    x = zeros(Int, length(locations), length(customers))
+    for i in locations
+        for j in customers
+            if y[i]==1 && d[j]*c[i,j]-lambda[j]<0
+                x[i,j] = 1
+            end
+        end
+    end
+
+    # Computing the Z_D(lambda^k)
+    Z_D = 0.0
+    for j in customers
+        Z_D = Z_D + lambda[j]
+        for i in locations
+            Z_D = Z_D + d[j]*c[i,j]*x[i,j] - lambda[j]*x[i,j]
+        end
+    end
+
+    return Z_D, x, y
+end
+\end{code}
+\noindent which accepts \kode{lambda} and \kode{p} as inputs and returns \kode{Z\_D}, \kode{x} and \kode{y}.
+
+
+
+
+\subsection{Finding Upper Bounds}
+By solving the Lagrangian problem, we have the location variable $\vect{y}$ and the assignment variable $\vect{x}$ on our hands. While the location variable $\vect{y}$ satisfies all the original constraints, the assignment variable $\vect{x}$ likely violate the original constraint that is relaxed ($\sum_{i\in\Ic} x_{ij} = 1$ for all $j\in\Jc$). To find a feasible solution and obtain an upper bound, we fix $\vect{y}$ at the solution of the Lagrangian problem, then assign each demand node to the nearest facility. This again simple procedure will provide us with an upper bound at each iteration.
+
+The \julia function for finding upper bounds may be written as follows:
+%= lang: julia
+\begin{code}
+function upper_bound(y)
+    # Computing x, given y
+    x = zeros(Int, length(locations), length(customers))
+    for j in customers
+        idx = indmin( c[:,j] + (1-y)*maximum(c) )
+        x[idx,j] = 1
+    end
+
+    # Computing Z
+    Z = 0.0
+    for i in locations
+        for j in customers
+            Z = Z + d[j]*c[i,j]*x[i,j]
+        end
+    end
+    return Z, x
+end
+\end{code}
+\noindent The first part computes a feasible solution $\vect{x}$, and the second parts computes the objective function value at $\vect{x}$; hence it provides an upper bound. While the second part is straightforward, the first part needs some explanation. In the above code, \kode{c[:,j]} is $j$-th column of the \kode{c} matrix. We want to pick the smallest value among the values in \kode{c[:,j]} with \kode{y[i]=1}. There will be many different ways of doing this. My strategy is to add a big number to the elements of \kode{c[:,j]} with \kode{y[i]=0}; that is, \kode{c[:,j] + (1-y)*maximum(c)}. When \kode{j=1}, the original data \kode{c[:,1]} looks like:
+%= lang: julia
+\begin{code}
+julia> c[:,1]
+7-element Array{Float64,1}:
+ 10.0
+ 13.0
+  4.0
+ 21.0
+ 32.0
+ 15.0
+ 28.0
+\end{code}
+\noindent If \kode{y=[1; 0; 0; 1; 0; 0; 1]}, we see
+%= lang: julia
+\begin{code}
+julia> c[:,1] + (1-y)*maximum(c)
+7-element Array{Float64,1}:
+ 10.0
+ 54.0
+ 45.0
+ 21.0
+ 73.0
+ 56.0
+ 28.0
+\end{code}
+\noindent Then we can simply choose the smallest value from the above result, to select the nearest \emph{open} facility location from the customer. The function \kode{indmin(vector)} finds the index of the minimum value in \kode{vector}; therefore we obtain
+%= lang: julia
+\begin{code}
+julia> idx = indmin( c[:,1] + (1-y)*maximum(c) )
+1
+\end{code}
+\noindent which indicates that the nearest open facility to customer 1 is in location 1.
+
+
+
+
+
+\subsection{Updating the Lagrangian Multiplier}
+
+To update the Lagrangian multiplier $\vect{\lambda}^k$ at each iteration $k$, we use the following subgradient optimization method:
+\[
+	\lambda^{k+1}_j = \lambda^k_j + t_k \bigg( 1 - \sum_{i\in\Ic} x_{Dij}^k \bigg)
+\]
+Note that there is no `$\max\{\cdot,0\}$' operation, since we relaxed equality constraints. The step size $t_k$ is determined as follows:
+\[
+	t_k = \frac{ \theta_k ( Z_\text{UB} - Z_D(\vect{\lambda}^k) ) }
+			   {  \sum_{j\in\Jc} \bigg( 1 - \sum_{i\in\Ic} x_{Dij}^k \bigg)^2 }
+\]
+where $Z_\text{UB}$ is the best-known---smallest---upper bound, $x_{Dij}^k$ is the the element at $(i,j)$ of the solution $\vect{x}^k_D$ to the Lagrangian problem at iteration $k$, and $\theta_k\in(0,2]$ is a scalar.
+
+
+To run the iterations of the Lagrangian relaxation algorithm by updating the multiplier as described above, we need some preparation in \julia{}. We first determine the maximum number of iterations to allow:
+%= lang: julia
+\begin{code}
+MAX_ITER = 10000
+\end{code}
+\noindent We also prepare two array objects to track what lower and upper bounds are obtained at each iteration:
+%= lang: julia
+\begin{code}
+UB = Array(Float64, 0)
+LB = Array(Float64, 0)
+\end{code}
+\noindent These two array objects contain nothing at this moment. The current best lower and upper bounds are recorded in the following two scalar variables:
+%= lang: julia
+\begin{code}
+Z_UB = Inf
+Z_LB = -Inf
+\end{code}
+\noindent Initial values for the upper and lower bounds are set to $\infty$ and $-\infty$, respectively. We also record the current best feasible solution (from the current best upper bound):
+%= lang: julia
+\begin{code}
+x_best = zeros(length(locations), length(customers))
+y_best = zeros(length(locations))
+\end{code}
+\noindent Finally we prepare an initial guess on the Lagrangian multiplier $\vect{\lambda}$:
+%= lang: julia
+\begin{code}
+lambda = zeros(size(customers))
+\end{code}
+\noindent where we set $\lambda_j = 0$ for all $j\in\Jc$.
+
+Let's first solve the problem optimally:
+%= lang: julia
+\begin{code}
+Z_opt, x_opt, y_opt = optimal(p)
+\end{code}
+\noindent which yields:
+%= lang: julia
+\begin{code}
+julia> Z_opt
+1029.0
+
+julia> y_opt
+y: 1 dimensions:
+[1] = 0.0
+[2] = 1.0
+[3] = 1.0
+[4] = -0.0
+[5] = -0.0
+[6] = -0.0
+[7] = 1.0
+\end{code}
+
+To run the iterations of the Lagrangian relaxation method, we will use for-loop:
+%= lang: julia
+\begin{code}
+for k=1:MAX_ITER
+	...
+
+    if opt_gap < 0.000001
+        break
+    end
+end
+\end{code}
+\noindent The loop will terminate once the optimality gap \kode{opt\_gap} is less than a small number, 0.000001.
+
+Inside the loop, we do the following. First we obtain lower and upper bounds, given the current value of \kode{lambda}:
+%= lang: julia
+\begin{code}
+    Z_D, x_D, y = lower_bound(lambda, p)
+    Z, x = upper_bound(y)
+\end{code}
+\noindent We then update the best-known upper and lower bounds, and the best-known feasible solutions:
+%= lang: julia
+\begin{code}
+    # Updating the upper bound
+    if Z < Z_UB
+        Z_UB = Z
+        x_best = x
+        y_best = y
+    end
+
+    # Updating the lower bound
+    if Z_D > Z_LB
+        Z_LB = Z_D
+    end
+\end{code}
+\noindent Just to observe the progress of the algorithm, we add the upper and lower bounds obtained from the current iteration to the track record array objects \kode{UB} and \kode{LB}:
+%= lang: julia
+\begin{code}
+    push!(UB, Z)
+    push!(LB, Z_D)
+\end{code}
+\noindent Note that the function \kode{push!} adds the new value to the \emph{end} of the array; hence it will change the array variable itself---that's why the function has \kode{!} in its name.
+
+We now compute the step size and update the multiplier. In this example, we just set $\theta_k = 1.0$ for the simplicity:
+%= lang: julia
+\begin{code}
+	theta = 1.0
+\end{code}
+\noindent We use an array object \kode{residual} to compute a vector whose $j$-th element is $1-\sum_{i\in\Ic}x^k_{Dij}$:
+%= lang: julia
+\begin{code}
+	residual = 1 - transpose(sum(x_D, 1))
+\end{code}
+\noindent where \kode{sum(x\_D, 1)} returns a row vector with $\sum_{i\in\Ic}x^k_{Dij}$ as its elements. Note that when we do addition or subtraction between a scalar and a vector, \julia{} automatically assumes that the scalar is a vector of all equal elements. That is \kode{1} in the above code is converted to \kode{ones(length(customers),1)}. The next step is to the multiplier:
+%= lang: julia
+\begin{code}
+    t = theta * (Z_UB - Z_D) / sum(residual.^2)
+    lambda = lambda + t * residual
+\end{code}
+\noindent where the \kode{.\string^2} means element-wise square; that is, \kode{sum(residual.\string^2)} is equivalent to $\sum_{j\in\Jc} \big( 1 - \sum_{i\in\Ic} x_{Dij}^k \big)^2$
+
+The for-loop should now look like:
+%= lang: julia
+\begin{code}
+for k=1:MAX_ITER
+    # Obtaining the lower and upper bounds
+    Z_D, x_D, y = lower_bound(lambda, p)
+    Z, x = upper_bound(y)
+
+    # Updating the upper bound
+    if Z < Z_UB
+        Z_UB = Z
+        x_best = x
+        y_best = y
+    end
+
+    # Updating the lower bound
+    if Z_D > Z_LB
+        Z_LB = Z_D
+    end
+
+    # Adding the bounds from the current iteration to the record
+    push!(UB, Z)
+    push!(LB, Z_D)
+
+    # Determining the step size and updating the multiplier
+    theta = 1.0
+    residual = 1 - transpose(sum(x_D, 1))
+    t = theta * (Z_UB - Z_D) / sum(residual.^2)
+    lambda = lambda + t * residual
+
+    # Computing the optimality gap
+    opt_gap = (Z_UB-Z_LB) / Z_UB
+    if opt_gap < 0.000001
+        break
+    end
+end
+\end{code}
+\noindent When implementing the Lagrangian relaxation methods, one should pay attention to the variables regarding the bounds: one should not be confused among \kode{Z}, \kode{Z\_D}, \kode{Z\_LB}, and \kode{Z\_UB}. Also be aware that if the original problem is minimization or maximization and the relaxed constraint is equality or inequality.
+
+Let's check if the Lagrangian relaxation method found a good solution:
+%= lang: julia
+\begin{code}
+julia> Z_UB
+1029.0
+
+julia> y_best
+7-element Array{Int64,1}:
+ 0
+ 1
+ 1
+ 0
+ 0
+ 0
+ 1
+\end{code}
+\noindent Comparing the above two values with \kode{Z\_opt} and \kode{y\_opt}, we see that the Lagrangian relaxation found the same optimal solution. Let's also see how it progressed:
+%= lang: julia
+\begin{code}
+julia> [LB UB]
+34x2 Array{Float64,2}:
+    0.0    1382.0
+  464.2    1073.0
+  880.933  1181.0
+  934.547  1029.0
+  924.036  1072.0
+  939.354  1073.0
+  964.13   1029.0
+  977.495  1072.0
+  984.033  1073.0
+  996.843  1029.0
+ 1001.92   1382.0
+  998.96   1072.0
+ 1004.45   1073.0
+ 1009.86   1072.0
+ 1016.51   1382.0
+ 1021.49   1073.0
+ 1023.58   1029.0
+ 1025.88   1072.0
+ 1026.57   1382.0
+ 1026.57   1029.0
+ 1027.02   1073.0
+ 1027.38   1072.0
+ 1027.97   1029.0
+ 1028.24   1072.0
+ 1028.62   1029.0
+ 1028.67   1073.0
+ 1028.89   1072.0
+ 1028.86   1029.0
+ 1028.93   1072.0
+ 1028.97   1029.0
+ 1028.98   1072.0
+ 1028.99   1029.0
+ 1029.0    1072.0
+ 1029.0    1029.0
+\end{code}
+\noindent Note that the optimal solution was found as early as in the fourth iteration. However, it went over many more iterations to confirm that it is indeed an optimal solution. The lower bound kept increasing and reached at the same bound in the 34-th iteration.
+
+Using the \kode{PyPlot} package as described in Section \ref{sec:pyplot}, we can provide a plot as in Figure \ref{fig:iterations}.
+
+\begin{figure}
+\image{images/lagrangian/iterations.pdf}
+\caption{Iterations of the Lagrangian Relaxation Method\label{fig:iterations}}
+\end{figure}
+
+The complete code is presented below:
+\begin{codelisting}
+\codecaption{The Lagrangian Relaxation Method for the $p$-Median Problem \\ \filepath{code/chap8/p-median.jl}}
+%= <<(code/chap8/p-median.jl, lang: julia)
+\end{codelisting}

@@ -1,0 +1,12 @@
+# Edit this file to customize your build steps with custom command options
+# or additional commands.
+#
+#softcover build:html
+#softcover build:pdf
+#softcover build:epub
+#softcover build:mobi
+#softcover build:preview
+
+mv ebooks/juliabook.pdf tmp/ebooks/
+mv ebooks/juliabook.epub tmp/ebooks/
+mv ebooks/juliabook.mobi tmp/ebooks/
