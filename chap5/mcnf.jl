@@ -1,5 +1,3 @@
-# code/chap5/mcnf.jl
-
 function minimal_cost_network_flow(nodes, links, c_dict, u_dict, b)
     mcnf = Model(solver=GurobiSolver())
 

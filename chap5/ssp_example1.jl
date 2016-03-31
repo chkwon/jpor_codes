@@ -1,5 +1,3 @@
-# code/chap5/ssp_example1.jl
-
 # Importing packages
 using Graphs
 
