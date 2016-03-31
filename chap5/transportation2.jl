@@ -1,4 +1,3 @@
-# code/chap5/tranpsortation1.jl
 using JuMP, Gurobi
 
 # Reading the data file and preparting arrays

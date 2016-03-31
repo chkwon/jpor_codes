@@ -1,5 +1,3 @@
-# code/chap5/mcnf_example1.jl
-
 # Importing packages
 using JuMP, Gurobi
 

@@ -1,4 +1,3 @@
-# code/chap4/curve_fit.jl
 using LsqFit		# for curve fitting
 using Gadfly		# for drawing plots
 
