@@ -30,19 +30,26 @@ d_bar = [-1.0, 0.0]
 We prepare function $f$ in \julia{} as follows:
 %= lang: julia
 \begin{code}
-function f_line(lambda)
+function f_line(x_bar, d_bar, lambda)
     x_new = x_bar + lambda*d_bar
     return (2x_new[1] - 3)^4 + (3x_new[1] - x_new[2])^2
 end
 \end{code}
-\noindent Note that \kode{f\_line} is indeed a function of \kode{lambda}, while \kode{x\_bar} and \kode{d\_bar} are regarded as constant parameters. Inside the function \kode{f\_line}, the values of \kode{x\_bar} and \kode{d\_bar} can be accessed. We need to understand the \emph{scope of variables} in \julia{} clearly to avoid any mistakes. Please read Section \ref{sec:scope} of this book.
+\noindent Note that \kode{f\_line} is indeed a function of \kode{lambda}, while \kode{x\_bar} and \kode{d\_bar} are regarded as constant parameters, or optional arguments for the purpose of optimization with respect to \kode{lambda}. 
 
-Now optimize \kode{f\_line} in the interval \kode{[0.0, 1.0]} using the Golden Section line search algorithm:
+To create an ad-hoc function that depends on the current values of \kode{x\_bar} and \kode{d\_bar} and accepts \kode{lambda} as the only argument, we use 
+%= lang: julia
+\begin{code}
+lambda -> f_line(x_bar, d_bar, lambda)
+\end{code}
+\noindent We now optimize \kode{f\_line} in the interval \kode{[0.0, 1.0]} using the Golden Section line search algorithm:
 %= lang: julia
 \begin{code}
 using Optim
-opt = optimize(f_line, 0.0, 1.0, method=:golden_section)
+opt = optimize( lambda -> f_line(x_bar, d_bar, lambda), 
+                           0.0, 1.0, method=:golden_section)
 \end{code}
+
 The optimal $\lambda$ value can be accessed by
 %= lang: julia
 \begin{code}
@@ -62,7 +69,8 @@ The complete code is shown below:
 %= <<(code/chap6/linesearch.jl, lang: julia)
 \end{codelisting}
 
-After the function declaration of \kode{f\_line} and constant parameters \kode{x\_bar} and \kode{d\_bar} in the same script file, it looks natural that the function \kode{f\_line} can access the values of those parameter values. Remember again that understanding the scope of variables, explained in Section \ref{sec:scope}, is important.
+
+
 
 
 \subsection{Unconstrained Optimization}
