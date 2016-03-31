@@ -40,44 +40,49 @@ authors:
 
 
 faq:
-    -
-      question: "How can I preview the book?"
-      answer: "Please visit <a href='http://www.chkwon.net/julia'>http://www.chkwon.net/julia</a>."
-    -
-      question: "Where is the table of contents?"
-      answer: "Please visit <a href='http://www.chkwon.net/julia'>http://www.chkwon.net/julia</a>."
-#
-# faq:
-#   -
-#     question: "What is the Julia Language?"
-#     answer: "The Julia Language is a new computer language developed for scientific computing. It is similar to MATLAB and Python in many ways, but as fast as C. I think Julia makes computing even more interesting and fun!"
-#   -
-#     question: "Why did I write this book?"
-#     answer: "The main motivation of writing this book was to help myself. I am a professor in the field of operations research, and my daily activities involve building models of mathematical optimization, developing algorithms for solving the problems, implementing those algorithms using computer programming languages, experimenting with data, etc. Three languages are involved: human language, mathematical language, and computer language. My students and I need to go over three different languages. We need 'translation' among the three languages.
-# <br><br>
-# When my students seek help on the tasks of 'translation,' I often provide them with my prior translation as an example, or find online resources that may be helpful to them. If students have proper background with proper mathematical education, sufficient computer programming experience, and good understanding of how numerical computing works, students can learn easier and my daily tasks in research and education would go smoothly.
-# <br><br>
-# To my frustration, many graduate students in operations research take long time to learn how to 'translate.' This book is to help them and help me to help them.
-# <br><br>
-# I'm neither a computer scientist nor a software engineer. Therefore, this book does not teach the best translation. Instead, I'll try to teach how one can finish some common tasks necessary in research and development works arising in the field of operations research and management science. It will be just one translation, not the best for sure. But after reading this book, readers will certainly be able to get things done, one way or the other."
-#
-#   -
-#     question: "What does this book teach?"
-#     answer: "This book is *neither* a textbook in numerical methods, a comprehensive introductory book to Julia programming, a textbook on numerical optimization, a complete manual of optimization solvers, *nor* an introductory book to computational science and engineering---it is a little bit of all.
-# <br><br>
-# This book will first teach how to install the Julia Language itself. This book teaches a little bit of syntax and standard libraries of Julia, a little bit of programming skills using Julia, a little bit of numerical methods, a little bit of optimization modeling, a little bit of Monte Carlo methods, a little bit of algorithms, and a little bit of optimization solvers.
-# <br><br>
-# This book by no means is complete and cannot serve as a standalone textbook for any of the above mentioned topics. In my opinion, it is best to use this book along with other major textbooks or reference books in operations research and management science. This book assumes that readers are already familiar with topics in optimization theory and algorithms, or are willing to learn by themselves from other references. Of course, I provide the best references of my knowledge to each topic.
-# <br><br>
-# After reading this book and some coding exercises, readers should be able to search and read many other technical documents available online. This book will just help the first step to computing in operations research and management science. This book is literally a primer on computing."
-#
-#   -
-#     question: "How can this book be used?"
-#     answer: "This book will certainly help graduate students (and their advisors) for tasks in their research. First year graduate students may use this book as a *tutorial* that guides them to various optimization solvers and algorithms available. This book will also be a *companion* through their graduate study. While students take various courses during their graduate study, this book will be always a good starting point to learn how to solve certain optimization problems and implement algorithms they learned. Eventually, this book can be a helpful *reference* for their thesis research.
-# <br><br>
-# Advanced graduate students may use this book as a *reference*. For example, when they need to implement a Lagrangian relaxation method for their own problem, they can refer to a chapter in this book to see how I did it and learn how they may be able to do it.
-# <br><br>
-# It is also my hope that this book can be used for courses in operations research, analytics, linear programming, nonlinear programming, numerical optimization, network optimization, management science, and transportation engineering, as a *supplementary textbook*. If there is a short course with 1 or 2 credit hours for teaching numerical methods and computing tools in operations research and management science, this book can be *primary or secondary textbook*, depending on the instructor's main focus."
+  -
+    question: "Can I look inside the book?"
+    answer: "Please visit <a href='http://www.chkwon.net/julia' target='_blank'>http://www.chkwon.net/julia</a> for sample chapters."
+
+  -
+    question: "Where is the table of contents?"
+    answer: "Please visit <a href='http://www.chkwon.net/julia' target='_blank'>http://www.chkwon.net/julia</a>."
+
+  -
+    question: "Can I download codes that are used in the book?"
+    answer: "Please visit <a href='http://www.chkwon.net/julia' target='_blank'>http://www.chkwon.net/julia</a>."    
+
+  -
+    question: "What is the Julia Language?"
+    answer: "The Julia Language is a new computer language developed for scientific computing. It is similar to MATLAB and Python in many ways, but as fast as C. I think Julia makes computing even more interesting and fun!"
+
+  -
+    question: "Why did I write this book?"
+    answer: "The main motivation of writing this book was to help myself. I am a professor in the field of operations research, and my daily activities involve building models of mathematical optimization, developing algorithms for solving the problems, implementing those algorithms using computer programming languages, experimenting with data, etc. Three languages are involved: human language, mathematical language, and computer language. My students and I need to go over three different languages. We need 'translation' among the three languages.
+<br><br>
+When my students seek help on the tasks of 'translation,' I often provide them with my prior translation as an example, or find online resources that may be helpful to them. If students have proper background with proper mathematical education, sufficient computer programming experience, and good understanding of how numerical computing works, students can learn easier and my daily tasks in research and education would go smoothly.
+<br><br>
+To my frustration, many graduate students in operations research take long time to learn how to 'translate.' This book is to help them and help me to help them.
+<br><br>
+I'm neither a computer scientist nor a software engineer. Therefore, this book does not teach the best translation. Instead, I'll try to teach how one can finish some common tasks necessary in research and development works arising in the field of operations research and management science. It will be just one translation, not the best for sure. But after reading this book, readers will certainly be able to get things done, one way or the other."
+
+  -
+    question: "What does this book teach?"
+    answer: "This book is *neither* a textbook in numerical methods, a comprehensive introductory book to Julia programming, a textbook on numerical optimization, a complete manual of optimization solvers, *nor* an introductory book to computational science and engineering---it is a little bit of all.
+<br><br>
+This book will first teach how to install the Julia Language itself. This book teaches a little bit of syntax and standard libraries of Julia, a little bit of programming skills using Julia, a little bit of numerical methods, a little bit of optimization modeling, a little bit of Monte Carlo methods, a little bit of algorithms, and a little bit of optimization solvers.
+<br><br>
+This book by no means is complete and cannot serve as a standalone textbook for any of the above mentioned topics. In my opinion, it is best to use this book along with other major textbooks or reference books in operations research and management science. This book assumes that readers are already familiar with topics in optimization theory and algorithms, or are willing to learn by themselves from other references. Of course, I provide the best references of my knowledge to each topic.
+<br><br>
+After reading this book and some coding exercises, readers should be able to search and read many other technical documents available online. This book will just help the first step to computing in operations research and management science. This book is literally a primer on computing."
+
+  -
+    question: "How can this book be used?"
+    answer: "This book will certainly help graduate students (and their advisors) for tasks in their research. First year graduate students may use this book as a *tutorial* that guides them to various optimization solvers and algorithms available. This book will also be a *companion* through their graduate study. While students take various courses during their graduate study, this book will be always a good starting point to learn how to solve certain optimization problems and implement algorithms they learned. Eventually, this book can be a helpful *reference* for their thesis research.
+<br><br>
+Advanced graduate students may use this book as a *reference*. For example, when they need to implement a Lagrangian relaxation method for their own problem, they can refer to a chapter in this book to see how I did it and learn how they may be able to do it.
+<br><br>
+It is also my hope that this book can be used for courses in operations research, analytics, linear programming, nonlinear programming, numerical optimization, network optimization, management science, and transportation engineering, as a *supplementary textbook*. If there is a short course with 1 or 2 credit hours for teaching numerical methods and computing tools in operations research and management science, this book can be *primary or secondary textbook*, depending on the instructor's main focus."
 
 # testimonials:
 #   -
