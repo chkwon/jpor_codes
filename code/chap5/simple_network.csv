@@ -1,9 +1,0 @@
-start node i,end node j,c_ij,u_ij
-1,2,2,Inf
-1,3,5,Inf
-2,3,3,Inf
-3,4,1,Inf
-3,5,2,1
-4,1,0,Inf
-4,5,2,Inf
-5,2,4,Inf
