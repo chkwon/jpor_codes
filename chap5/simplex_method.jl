@@ -17,20 +17,9 @@ module SimplexMethod
     function initial_BFS(A, b)
         m, n = size(A)
 
-        # First Trying Last Columns
-        # If lucky, they are surplus variables
-        b_idx = collect(n-m+1:n)
-        B = A[:, b_idx]
-        if B == eye(3)
-            x_B = b
-        else
-            x_B = inv(B) * b
-        end
-        if isnonnegative(x_B)
-            return b_idx, x_B, B
-        end
-
-        for b_idx in combinations(1:n, m)
+        comb = collect(combinations(1:n, m))
+        for i in length(comb):-1:1
+            b_idx = comb[i]
             B = A[:, b_idx]
             x_B = inv(B) * b
             if isnonnegative(x_B)
@@ -96,15 +85,13 @@ module SimplexMethod
 
         # Updating b_idx
         t.b_idx[ find(t.b_idx.==t.b_idx[exiting]) ] = entering
-
-        # return z_c, Y, x_B, obj, b_idx
     end
 
     function pivot_point(t::SimplexTableau)
         # Finding the entering variable index
-        entering = findfirst(t.z_c.>0)
+        entering = findfirst(t.z_c .> 0)
         if entering == 0
-            error("Optimal: This error should never occur, because isOptimal(z_c) is checked in advanced")
+            error("Optimal")
         end
 
         # min ratio test / finding the exiting variable index
@@ -123,34 +110,31 @@ module SimplexMethod
         b = Array{Float64}(b)
 
         m, n = size(A)
-        @assert rank(A) == min(m,n)
 
         # Finding an initial BFS
         b_idx, x_B, B = initial_BFS(A,b)
-        n_idx = setdiff(1:n, b_idx)
 
         Y = inv(B) * A
-
         c_B = c[b_idx]
+        obj = dot(c_B, x_B)
 
         # z_c is a row vector
         z_c = zeros(1,n)
+        n_idx = setdiff(1:n, b_idx)
         z_c[n_idx] = c_B' * inv(B) * A[:,n_idx] - c[n_idx]'
-
-        obj = dot(c_B, x_B)
 
         return SimplexTableau(z_c, Y, x_B, obj, b_idx)
     end
 
-    function isOptimal(z_c)
-        return findfirst(z_c.>0) == 0
+    function isOptimal(tableau)
+        return findfirst( tableau.z_c .> 0 ) == 0
     end
 
     function simplex_method(c, A, b)
         tableau = initialize(c, A, b)
         print_tableau(tableau)
 
-        while !isOptimal(tableau.z_c)
+        while !isOptimal(tableau)
             pivoting!(tableau)
             print_tableau(tableau)
         end

@@ -1,18 +1,18 @@
 
-function isnonnegative(x::Array{Float64})
+function isnonnegative(x::Array{Float64, 1})
     return length( x[ x .< 0] ) == 0
 end
 
-function search_extreme_points(c, A, b)
+function searchBFS(c, A, b)
     m, n = size(A)
-    @assert rank(A) == min(m,n)
+    @assert rank(A) == m
 
-    obj = Inf
     opt_x = zeros(n)
+    obj = Inf
+
     for b_idx in combinations(1:n, m)
         B = A[:, b_idx]
         c_B = c[b_idx]
-
         x_B = inv(B) * b
 
         if isnonnegative(x_B)
