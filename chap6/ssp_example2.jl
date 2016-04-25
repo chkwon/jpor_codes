@@ -25,7 +25,7 @@ for i in 1:no_link
 	c_dict[(start_node[i], end_node[i])] = c[i]
 end
 
-w = Array(Float64, no_node)
+w = Array{Float64}(no_node)
 
 # Step 0
 w[origin] = 0

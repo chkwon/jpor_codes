@@ -38,13 +38,13 @@ end
 
 # Generating N samples
 N = 100
-samples = Array(Float64, no_products, N)
+samples = Array{Float64}(no_products, N)
 for j in products
     samples[j,:] = rand( Normal(mu[j], sigma[j]), N)
 end
 
 # Obtain the dual variable for each sample
-pi_samples = Array(Float64, no_resources, N)
+pi_samples = Array{Float64}(no_resources, N)
 for k in 1:N
     pi_samples[:,k] = DLP(x, samples[:,k])
 end
