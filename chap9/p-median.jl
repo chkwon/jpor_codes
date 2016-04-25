@@ -52,7 +52,7 @@ end
 
 function lower_bound(lambda, p)
     # Step 1: Computing v
-    v = Array(Float64, size(locations))
+    v = Array{Float64}(size(locations))
     for i in locations
         v[i] = 0
         for j in customers
@@ -114,8 +114,8 @@ end
 MAX_ITER = 10000
 
 # To track the upper and lower bounds
-UB = Array(Float64, 0)
-LB = Array(Float64, 0)
+UB = Array{Float64}(0)
+LB = Array{Float64}(0)
 
 # The best-known upper and lower bounds
 Z_UB = Inf
