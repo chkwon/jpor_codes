@@ -38,22 +38,22 @@ end
 mcnf = Model(solver=GurobiSolver())
 
 # Defining decision variables
-@defVar(mcnf, 0<= x[link in links] <= u_dict[link])
+@variable(mcnf, 0<= x[link in links] <= u_dict[link])
 
 # Setting the objective
-@setObjective(mcnf, Min, sum{ c_dict[link] * x[link], link in links}  )
+@objective(mcnf, Min, sum{ c_dict[link] * x[link], link in links}  )
 
 # Adding the flow conservation constraints
 for i in nodes
-    @addConstraint(mcnf, sum{x[(ii,j)], (ii,j) in links; ii==i }
+    @constraint(mcnf, sum{x[(ii,j)], (ii,j) in links; ii==i }
                        - sum{x[(j,ii)], (j,ii) in links; ii==i } == b[i])
 end
 
 print(mcnf)
 status = solve(mcnf)
 println("The solution status is: $status")
-obj = getObjectiveValue(mcnf)
-x_star = getValue(x)
+obj = getobjectivevalue(mcnf)
+x_star = getvalue(x)
 
 println("The optimal objective function value is = $obj")
 println(x_star)
