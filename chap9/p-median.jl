@@ -21,29 +21,29 @@ customers = 1:length(d) # the set, J
 function optimal(p)
     m = Model(solver=GurobiSolver())
 
-    @defVar(m, x[i in locations, j in customers] >= 0)
-    @defVar(m, y[i in locations], Bin)
+    @variable(m, x[i in locations, j in customers] >= 0)
+    @variable(m, y[i in locations], Bin)
 
-    @setObjective(m, Min, sum{ d[j]*c[i,j]*x[i,j],
+    @objective(m, Min, sum{ d[j]*c[i,j]*x[i,j],
                                  i in locations, j in customers} )
 
     for j in customers
-        @addConstraint(m, sum{ x[i,j], i in locations} == 1)
+        @constraint(m, sum{ x[i,j], i in locations} == 1)
     end
 
-    @addConstraint(m, sum{ y[i], i in locations} == p)
+    @constraint(m, sum{ y[i], i in locations} == p)
 
     for i in locations
         for j in customers
-            @addConstraint(m, x[i,j] <= y[i] )
+            @constraint(m, x[i,j] <= y[i] )
         end
     end
 
     solve(m)
 
-    Z_opt = getObjectiveValue(m)
-    x_opt = getValue(x)
-    y_opt = getValue(y)
+    Z_opt = getobjectivevalue(m)
+    x_opt = getvalue(x)
+    y_opt = getvalue(y)
 
     return Z_opt, x_opt, y_opt
 end

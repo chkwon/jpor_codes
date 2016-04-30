@@ -21,18 +21,18 @@ A = [ 1 1 0 0 1 1 ;
 # Solving the deterministic LP problem
 function DLP(x, D)
     m = Model(solver=GurobiSolver())
-    @defVar(m, y[products] >= 0)
-    @setObjective(m, Max, sum{ p[j]*y[j], j in products} )
+    @variable(m, y[products] >= 0)
+    @objective(m, Max, sum{ p[j]*y[j], j in products} )
 
     # Resource Constraint
-    @addConstraint(m, rsc_const[i=1:no_resources],
+    @constraint(m, rsc_const[i=1:no_resources],
             sum{ A[i,j]*y[i], j in products} <= x[i]  )
 
     # Upper Bound
-    @addConstraint(m, bounds[j=1:no_products], y[j] <= D[j] )
+    @constraint(m, bounds[j=1:no_products], y[j] <= D[j] )
 
     solve(m)
-    pi = getDual(rsc_const)
+    pi = getdual(rsc_const)
     return pi
 end
 

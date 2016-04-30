@@ -26,16 +26,16 @@ end
 # Preapring an Optimization Model
 tp = Model(solver=GurobiSolver())
 
-@defVar(tp, x[supply_nodes, demand_nodes] >= 0)
-@setObjective(tp, Min, sum{c_dict[i,j]*x[i,j],
+@variable(tp, x[supply_nodes, demand_nodes] >= 0)
+@objective(tp, Min, sum{c_dict[i,j]*x[i,j],
                               i in supply_nodes, j in demand_nodes})
 for i in supply_nodes
-    @addConstraint(tp, sum{x[i,j], j in demand_nodes} == s_dict[i] )
+    @constraint(tp, sum{x[i,j], j in demand_nodes} == s_dict[i] )
 end
 for j in demand_nodes
-    @addConstraint(tp, sum{x[i,j], i in supply_nodes} == d_dict[j] )
+    @constraint(tp, sum{x[i,j], i in supply_nodes} == d_dict[j] )
 end
 
 print(tp)
 solve(tp)
-x_star = getValue(x)
+x_star = getvalue(x)

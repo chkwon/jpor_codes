@@ -5,16 +5,16 @@ using Gurobi
 m = Model(solver=GurobiSolver())
 
 # Declaring variables
-@defVar(m, 0<= x1 <=10)
-@defVar(m, x2 >=0, Int)
-@defVar(m, x3, Bin)
+@variable(m, 0<= x1 <=10)
+@variable(m, x2 >=0, Int)
+@variable(m, x3, Bin)
 
 # Setting the objective
-@setObjective(m, Max, x1 + 2x2 + 5x3)
+@objective(m, Max, x1 + 2x2 + 5x3)
 
 # Adding constraints
-@addConstraint(m, constraint1, -x1 +  x2 + 3x3 <= -5)
-@addConstraint(m, constraint2,  x1 + 3x2 - 7x3 <= 10)
+@constraint(m, constraint1, -x1 +  x2 + 3x3 <= -5)
+@constraint(m, constraint2,  x1 + 3x2 - 7x3 <= 10)
 
 # Printing the prepared optimization model
 print(m)
@@ -24,6 +24,6 @@ solve(m)
 
 # Printing the optimal solutions obtained
 println("Optimal Solutions:")
-println("x1 = ", getValue(x1))
-println("x2 = ", getValue(x2))
-println("x3 = ", getValue(x3))
+println("x1 = ", getvalue(x1))
+println("x2 = ", getvalue(x2))
+println("x3 = ", getvalue(x3))
