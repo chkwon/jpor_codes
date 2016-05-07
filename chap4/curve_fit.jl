@@ -1,5 +1,5 @@
 using LsqFit		# for curve fitting
-using Gadfly		# for drawing plots
+using PyPlot		# for drawing plots
 
 # preparing data for fitting
 xdata = [ 15.2; 19.9;  2.2; 11.8; 12.1; 18.1; 11.8; 13.4; 11.5;  0.5;
@@ -22,15 +22,20 @@ errors = estimate_errors(fit)
 xfit = 0:0.1:20
 yfit = model(xfit, fit.param)
 
-# plotting. It will open a web browser to show the plot
-fit_plot =
-  plot(layer(x=xdata, y=ydata, Geom.point),
-       layer(x=xfit, y=yfit, Geom.line, Theme(default_color=colorant"red") ) )
+# Creating a new figure object
+fig = figure()
 
-# Saving the plot as SVG/PNG files
-draw(SVG("fit_plot.svg", 6inch, 4inch), fit_plot)
-draw(PNG("fit_plot.png", 400px, 300px), fit_plot)
+# Plotting two datasets
+plot(xdata, ydata, color="black", linewidth=2.0, marker="o", linestyle="None")
+plot(xfit, yfit, color="red", linewidth=2.0)
 
-# To save the plot in PDF format, you need to install the Cairo package
-# julia> Pkg.add("Cairo")
-draw(PDF("fit_plot.pdf", 6inch, 4inch), fit_plot)
+# Labeling axes
+xlabel("x", fontsize="xx-large")
+ylabel("y", fontsize="xx-large")
+
+# Save the figure as PNG and PDF
+savefig("fit_plot.png")
+savefig("fit_plot.pdf")
+
+# Closing the figure object
+close(fig)
