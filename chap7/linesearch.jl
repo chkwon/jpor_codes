@@ -9,7 +9,7 @@ x_bar = [2.0, 3.0]
 d_bar = [-1.0, 0.0]
 
 opt = optimize( lambda -> f_line(x_bar, d_bar, lambda),
-                             0.0, 1.0, method=:golden_section)
+                             0.0, 1.0, method=GoldenSection())
 
 println("optimal lambda = ", opt.minimum)
 println("optimal f(x+lambda*d) = ", opt.f_minimum)
