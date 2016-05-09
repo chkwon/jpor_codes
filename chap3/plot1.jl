@@ -18,8 +18,8 @@ ylabel(L"\sin(3x)")
 title("Test plotting")
 
 # Save the figure as PNG and PDF
-savefig("myplot1.png")
-savefig("myplot1.pdf")
+savefig("plot1.png")
+savefig("plot1.pdf")
 
 # Close the figure object
 close(fig)
