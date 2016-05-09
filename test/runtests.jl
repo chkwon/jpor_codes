@@ -1,3 +1,5 @@
+Pkg.update()
+
 no_test = Set(["runtests.jl", "mcnf.jl"])
 
 org_dir = pwd()
@@ -73,3 +75,10 @@ for i in 1:length(fails)
     info(fails[i], " fails")
     warn(errors[i])
 end
+
+
+
+@show Pkg.installed("JuMP")
+@show Pkg.installed("Optim")
+@show Pkg.installed("MathProgBase")
+versioninfo()
