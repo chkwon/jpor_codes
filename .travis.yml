@@ -8,4 +8,5 @@ notifications:
     email: false
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e test/runtests.jl
+    - git clone https://github.com/chkwon/jpor_codes.git
+    - julia -e jpor_codes/test/runtests.jl
