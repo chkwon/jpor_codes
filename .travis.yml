@@ -9,4 +9,4 @@ notifications:
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
     - git clone https://github.com/chkwon/jpor_codes.git jpor_codes
-    - julia -e jpor_codes/test/runtests.jl
+    - julia jpor_codes/test/runtests.jl
