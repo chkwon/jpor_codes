@@ -1,0 +1,12 @@
+language: julia
+os:
+    - linux
+    - osx
+julia:
+    - 0.4
+    - nightly
+notifications:
+    email: false
+script:
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e test/runtests.jl
