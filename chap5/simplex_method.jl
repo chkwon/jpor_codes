@@ -1,5 +1,7 @@
 module SimplexMethod
 
+    using Combinatorics
+
     export simplex_method
 
     type SimplexTableau
@@ -80,7 +82,7 @@ module SimplexMethod
 
         # updating the row for the reduced costs
         coef = t.z_c[entering]
-        t.z_c -= coef * t.Y[exiting, :]
+        t.z_c -= coef * t.Y[exiting, :]'
         t.obj -= coef * t.x_B[exiting]
 
         # Updating b_idx

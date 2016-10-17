@@ -1,3 +1,4 @@
+using Combinatorics
 
 function isnonnegative(x::Array{Float64, 1})
     return length( x[ x .< 0] ) == 0
