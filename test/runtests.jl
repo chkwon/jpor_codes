@@ -78,7 +78,8 @@ end
 
 
 
-@show Pkg.installed("JuMP")
-@show Pkg.installed("Optim")
-@show Pkg.installed("MathProgBase")
+println("JuMP v", Pkg.installed("JuMP"))
+println("Optim v", Pkg.installed("Optim"))
+println("MathProgBase v", Pkg.installed("MathProgBase"))
+
 versioninfo()
