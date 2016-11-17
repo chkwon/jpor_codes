@@ -24,14 +24,14 @@ function optimal(p)
     @variable(m, x[i in locations, j in customers] >= 0)
     @variable(m, y[i in locations], Bin)
 
-    @objective(m, Min, sum{ d[j]*c[i,j]*x[i,j],
-                                 i in locations, j in customers} )
+    @objective(m, Min, sum( d[j]*c[i,j]*x[i,j]
+                                 for i in locations, j in customers) )
 
     for j in customers
-        @constraint(m, sum{ x[i,j], i in locations} == 1)
+        @constraint(m, sum( x[i,j] for i in locations) == 1)
     end
 
-    @constraint(m, sum{ y[i], i in locations} == p)
+    @constraint(m, sum( y[i] for i in locations) == p)
 
     for i in locations
         for j in customers
