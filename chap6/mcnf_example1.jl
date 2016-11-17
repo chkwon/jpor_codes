@@ -41,12 +41,12 @@ mcnf = Model(solver=GurobiSolver())
 @variable(mcnf, 0<= x[link in links] <= u_dict[link])
 
 # Setting the objective
-@objective(mcnf, Min, sum{ c_dict[link] * x[link], link in links}  )
+@objective(mcnf, Min, sum( c_dict[link] * x[link] for link in links)  )
 
 # Adding the flow conservation constraints
 for i in nodes
-    @constraint(mcnf, sum{x[(ii,j)], (ii,j) in links; ii==i }
-                       - sum{x[(j,ii)], (j,ii) in links; ii==i } == b[i])
+    @constraint(mcnf, sum(x[(ii,j)] for (ii,j) in links if ii==i )
+                       - sum(x[(j,ii)] for (j,ii) in links if ii==i ) == b[i])
 end
 
 print(mcnf)

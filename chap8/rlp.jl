@@ -22,11 +22,11 @@ A = [ 1 1 0 0 1 1 ;
 function DLP(x, D)
     m = Model(solver=GurobiSolver())
     @variable(m, y[products] >= 0)
-    @objective(m, Max, sum{ p[j]*y[j], j in products} )
+    @objective(m, Max, sum( p[j]*y[j] for j in products) )
 
     # Resource Constraint
     @constraint(m, rsc_const[i=1:no_resources],
-            sum{ A[i,j]*y[i], j in products} <= x[i]  )
+            sum( A[i,j]*y[i] for j in products) <= x[i]  )
 
     # Upper Bound
     @constraint(m, bounds[j=1:no_products], y[j] <= D[j] )
