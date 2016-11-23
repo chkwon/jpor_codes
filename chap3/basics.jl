@@ -77,33 +77,33 @@ println("b is $b.")
 println("The second element of b is $(b[2]).")
 @printf("The %s of a = %f", "value", a)
 
-c = [ 123.12345   ;
-       10.983     ;
-        1.0932132  ]
+c = [ 123.12345  ;
+    10.983   ;
+    1.0932132  ]
 for i in 1:length(c)
-    println("c[$i] = $(c[i])")
+  println("c[$i] = $(c[i])")
 end
 for i in 1:length(c)
-    @printf("c[%d] = %7.3f\n", i, c[i])
+  @printf("c[%d] = %7.3f\n", i, c[i])
 end
 
 str = @sprintf("The %s of a = %f", "value", a)
 println(str)
 
 for i in 1:5
-   println("This is number $i.")
+  println("This is number $i.")
 end
 
 for i in 1:5
-   if i >= 3
-       break
-   end
-   println("This is number $i.")
+  if i >= 3
+  break
+  end
+  println("This is number $i.")
 end
 
 s = 0
 for i in 1:length(a)
-	s += a[i]
+  s += a[i]
 end
 
 my_keys = ["Zinedine Zidane", "Magic Johnson", "Yuna Kim"]
@@ -111,7 +111,7 @@ my_values = ["football", "basketball", "figure skating"]
 
 d = Dict()
 for i in 1:length(my_keys)
-   d[my_keys[i]] = my_values[i]
+  d[my_keys[i]] = my_values[i]
 end
 @show d
 for (key, value) in d
@@ -125,11 +125,11 @@ links = [ (1,2), (3,4), (4,2) ]
 link_costs = [ 5, 13, 8 ]
 link_dict = Dict()
 for i in 1:length(links)
-   link_dict[ links[i] ] = link_costs[i]
+  link_dict[ links[i] ] = link_costs[i]
 end
 @show link_dict
 for (link, cost) in link_dict
-   println("Link $link has cost of $cost.")
+  println("Link $link has cost of $cost.")
 end
 
 
@@ -155,18 +155,18 @@ x, y = my_func(3,2)
 
 # Scope of variables
 function f1(x)
-    return x+a
+  return x+a
 end
 a = 0
 for i in 1:10
-    a = i
-    println(f1(1))
+  a = i
+  println(f1(1))
 end
 
 
 function f2(x)
-    a = 0
-    return x+a
+  a = 0
+  return x+a
 end
 a = 5
 println(f2(1))
@@ -174,8 +174,8 @@ println(a)
 
 
 function f3(x)
-    _a = 0
-    return x + _a
+  _a = 0
+  return x + _a
 end
 
 a = 5
@@ -184,7 +184,7 @@ println(a)
 
 
 function f4(x, a)
-    return x + a
+  return x + a
 end
 
 a = 5

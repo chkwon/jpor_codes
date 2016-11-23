@@ -20,10 +20,10 @@ print(m)
 
 println("Optimal Solutions:")
 for i=1:3
-    println("x[$i] = ", getvalue(x[i]))
+  println("x[$i] = ", getvalue(x[i]))
 end
 
 println("Dual Variables:")
 for j=1:2
-    println("dual[$j] = ", getdual(constraint[j]))
+  println("dual[$j] = ", getdual(constraint[j]))
 end

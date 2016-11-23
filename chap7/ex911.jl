@@ -17,7 +17,7 @@ m = Model(solver=CouenneNLSolver())
 @constraint(m, -1 + l[1] + 3l[2] +  l[3] - l[4] + l[5] == 0)
 @constraint(m,     4l[2] - 2l[2] - 3l[3]               == 0)
 for i in 1:5
-    @NLconstraint(m, l[i] * s[i] == 0)
+  @NLconstraint(m, l[i] * s[i] == 0)
 end
 
 solve(m)

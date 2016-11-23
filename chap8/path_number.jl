@@ -13,8 +13,8 @@ destination = 5
 N = 100
 estimate = 0
 for i in 1:N
-    I, g = generate_sample_path(adj_mtx, origin, destination)
-    estimate += I / g
+  I, g = generate_sample_path(adj_mtx, origin, destination)
+  estimate += I / g
 end
 estimate = estimate / N
 
@@ -44,8 +44,8 @@ destination = size(adj_mtx,1)
 N = 1000
 estimate = 0
 for i in 1:N
-    I, g = generate_sample_path(adj_mtx, origin, destination)
-    estimate += I / g
+  I, g = generate_sample_path(adj_mtx, origin, destination)
+  estimate += I / g
 end
 estimate = estimate / N
 

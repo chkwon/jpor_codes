@@ -29,9 +29,9 @@ links = Array{Tuple{Int, Int}}(no_link)
 c_dict = Dict()
 u_dict = Dict()
 for i=1:no_link
-    links[i] = (start_node[i], end_node[i])
-    c_dict[(start_node[i], end_node[i])] = c[i]
-    u_dict[(start_node[i], end_node[i])] = u[i]
+  links[i] = (start_node[i], end_node[i])
+  c_dict[(start_node[i], end_node[i])] = c[i]
+  u_dict[(start_node[i], end_node[i])] = u[i]
 end
 
 # Preparing an optimization model
@@ -45,8 +45,8 @@ mcnf = Model(solver=GurobiSolver())
 
 # Adding the flow conservation constraints
 for i in nodes
-    @constraint(mcnf, sum(x[(ii,j)] for (ii,j) in links if ii==i )
-                       - sum(x[(j,ii)] for (j,ii) in links if ii==i ) == b[i])
+  @constraint(mcnf, sum(x[(ii,j)] for (ii,j) in links if ii==i )
+                  - sum(x[(j,ii)] for (j,ii) in links if ii==i ) == b[i])
 end
 
 print(mcnf)

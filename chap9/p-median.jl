@@ -19,94 +19,94 @@ customers = 1:length(d) # the set, J
 
 
 function optimal(p)
-    m = Model(solver=GurobiSolver())
+  m = Model(solver=GurobiSolver())
 
-    @variable(m, x[i in locations, j in customers] >= 0)
-    @variable(m, y[i in locations], Bin)
+  @variable(m, x[i in locations, j in customers] >= 0)
+  @variable(m, y[i in locations], Bin)
 
-    @objective(m, Min, sum( d[j]*c[i,j]*x[i,j]
-                                 for i in locations, j in customers) )
+  @objective(m, Min, sum( d[j]*c[i,j]*x[i,j]
+                     for i in locations, j in customers) )
 
+  for j in customers
+    @constraint(m, sum( x[i,j] for i in locations) == 1)
+  end
+
+  @constraint(m, sum( y[i] for i in locations) == p)
+
+  for i in locations
     for j in customers
-        @constraint(m, sum( x[i,j] for i in locations) == 1)
+      @constraint(m, x[i,j] <= y[i] )
     end
+  end
 
-    @constraint(m, sum( y[i] for i in locations) == p)
+  solve(m)
 
-    for i in locations
-        for j in customers
-            @constraint(m, x[i,j] <= y[i] )
-        end
-    end
+  Z_opt = getobjectivevalue(m)
+  x_opt = getvalue(x)
+  y_opt = getvalue(y)
 
-    solve(m)
-
-    Z_opt = getobjectivevalue(m)
-    x_opt = getvalue(x)
-    y_opt = getvalue(y)
-
-    return Z_opt, x_opt, y_opt
+  return Z_opt, x_opt, y_opt
 end
 
 
 
 function lower_bound(lambda, p)
-    # Step 1: Computing v
-    v = Array{Float64}(size(locations))
-    for i in locations
-        v[i] = 0
-        for j in customers
-            v[i] = v[i] + min(0, d[j]*c[i,j] - lambda[j] )
-        end
-    end
-
-    # Step 2: Sorting v from the most negative to zero
-    idx = sortperm(v)
-
-    # Step 3: Determine y
-    y = zeros(Int, size(locations))
-    y[idx[1:p]] = 1
-
-    # Step 4: Determine x
-    x = zeros(Int, length(locations), length(customers))
-    for i in locations
-        for j in customers
-            if y[i]==1 && d[j]*c[i,j]-lambda[j]<0
-                x[i,j] = 1
-            end
-        end
-    end
-
-    # Computing the Z_D(lambda^k)
-    Z_D = 0.0
+  # Step 1: Computing v
+  v = Array{Float64}(size(locations))
+  for i in locations
+    v[i] = 0
     for j in customers
-        Z_D = Z_D + lambda[j]
-        for i in locations
-            Z_D = Z_D + d[j]*c[i,j]*x[i,j] - lambda[j]*x[i,j]
-        end
+      v[i] = v[i] + min(0, d[j]*c[i,j] - lambda[j] )
     end
+  end
 
-    return Z_D, x, y
+  # Step 2: Sorting v from the most negative to zero
+  idx = sortperm(v)
+
+  # Step 3: Determine y
+  y = zeros(Int, size(locations))
+  y[idx[1:p]] = 1
+
+  # Step 4: Determine x
+  x = zeros(Int, length(locations), length(customers))
+  for i in locations
+    for j in customers
+      if y[i]==1 && d[j]*c[i,j]-lambda[j]<0
+        x[i,j] = 1
+      end
+    end
+  end
+
+  # Computing the Z_D(lambda^k)
+  Z_D = 0.0
+  for j in customers
+    Z_D = Z_D + lambda[j]
+    for i in locations
+      Z_D = Z_D + d[j]*c[i,j]*x[i,j] - lambda[j]*x[i,j]
+    end
+  end
+
+  return Z_D, x, y
 end
 
 
 
 function upper_bound(y)
-    # Computing x, given y
-    x = zeros(Int, length(locations), length(customers))
-    for j in customers
-        idx = indmin( c[:,j] + (1-y)*maximum(c) )
-        x[idx,j] = 1
-    end
+  # Computing x, given y
+  x = zeros(Int, length(locations), length(customers))
+  for j in customers
+    idx = indmin( c[:,j] + (1-y)*maximum(c) )
+    x[idx,j] = 1
+  end
 
-    # Computing Z
-    Z = 0.0
-    for i in locations
-        for j in customers
-            Z = Z + d[j]*c[i,j]*x[i,j]
-        end
+  # Computing Z
+  Z = 0.0
+  for i in locations
+    for j in customers
+      Z = Z + d[j]*c[i,j]*x[i,j]
     end
-    return Z, x
+  end
+  return Z, x
 end
 
 
@@ -132,37 +132,37 @@ lambda = zeros(size(customers))
 Z_opt, x_opt, y_opt = optimal(p)
 
 for k=1:MAX_ITER
-    # Obtaining the lower and upper bounds
-    Z_D, x_D, y = lower_bound(lambda, p)
-    Z, x = upper_bound(y)
+  # Obtaining the lower and upper bounds
+  Z_D, x_D, y = lower_bound(lambda, p)
+  Z, x = upper_bound(y)
 
-    # Updating the upper bound
-    if Z < Z_UB
-        Z_UB = Z
-        x_best = x
-        y_best = y
-    end
+  # Updating the upper bound
+  if Z < Z_UB
+    Z_UB = Z
+    x_best = x
+    y_best = y
+  end
 
-    # Updating the lower bound
-    if Z_D > Z_LB
-        Z_LB = Z_D
-    end
+  # Updating the lower bound
+  if Z_D > Z_LB
+    Z_LB = Z_D
+  end
 
-    # Adding the bounds from the current iteration to the record
-    push!(UB, Z)
-    push!(LB, Z_D)
+  # Adding the bounds from the current iteration to the record
+  push!(UB, Z)
+  push!(LB, Z_D)
 
-    # Determining the step size and updating the multiplier
-    theta = 1.0
-    residual = 1 - transpose(sum(x_D, 1))
-    t = theta * (Z_UB - Z_D) / sum(residual.^2)
-    lambda = lambda + t * residual
+  # Determining the step size and updating the multiplier
+  theta = 1.0
+  residual = 1 - transpose(sum(x_D, 1))
+  t = theta * (Z_UB - Z_D) / sum(residual.^2)
+  lambda = lambda + t * residual
 
-    # Computing the optimality gap
-    opt_gap = (Z_UB-Z_LB) / Z_UB
-    if opt_gap < 0.000001
-        break
-    end
+  # Computing the optimality gap
+  opt_gap = (Z_UB-Z_LB) / Z_UB
+  if opt_gap < 0.000001
+    break
+  end
 end
 
 
