@@ -31,9 +31,9 @@ links = Array{Tuple{Int, Int}}(no_link)
 c_dict = Dict()
 u_dict = Dict()
 for i=1:no_link
-   	links[i] = (start_node[i], end_node[i])
-    c_dict[(start_node[i], end_node[i])] = c[i]
-    u_dict[(start_node[i], end_node[i])] = u[i]
+  links[i] = (start_node[i], end_node[i])
+  c_dict[(start_node[i], end_node[i])] = c[i]
+  u_dict[(start_node[i], end_node[i])] = u[i]
 end
 
 # Solve the minimal-cost network-flow problem by a function call

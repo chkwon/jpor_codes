@@ -1,8 +1,8 @@
 using Optim
 
 function f_line(x_bar, d_bar, lambda)
-    x_new = x_bar + lambda*d_bar
-    return (2x_new[1] - 3)^4 + (3x_new[1] - x_new[2])^2
+  x_new = x_bar + lambda*d_bar
+  return (2x_new[1] - 3)^4 + (3x_new[1] - x_new[2])^2
 end
 
 x_bar = [2.0, 3.0]

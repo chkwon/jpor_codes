@@ -14,7 +14,7 @@ index_constraints = 1:2
 @objective(m, Max, sum{ c[i]*x[i], i in index_x} )
 
 @constraint(m, constraint[j in index_constraints],
-                  sum{ A[j,i]*x[i], i in index_x } <= b[j] )
+               sum{ A[j,i]*x[i], i in index_x } <= b[j] )
 
 @constraint(m, bound, x[1] <= 10)
 
@@ -24,10 +24,10 @@ print(m)
 
 println("Optimal Solutions:")
 for i in index_x
-    println("x[$i] = ", getvalue(x[i]))
+  println("x[$i] = ", getvalue(x[i]))
 end
 
 println("Dual Variables:")
 for j in index_constraints
-    println("dual[$j] = ", getdual(constraint[j]))
+  println("dual[$j] = ", getdual(constraint[j]))
 end
