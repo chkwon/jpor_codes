@@ -3,22 +3,22 @@ using LightGraphs
 
 # Retrieves 0-1 'x' vector from the 'state'
 function getShortestX(state, start_node, end_node, origin, destination)
-	_x = zeros(Int, length(start_node))
-	_path = enumerate_paths(state, destination)
+  _x = zeros(Int, length(start_node))
+  _path = enumerate_paths(state, destination)
 
-	for i=1:length(_path)-1
-		_start = _path[i]
-		_end = _path[i+1]
+  for i=1:length(_path)-1
+    _start = _path[i]
+    _end = _path[i+1]
 
-		for j=1:length(start_node)
-			if start_node[j]==_start && end_node[j]==_end
-				_x[j] = 1
-				break
-			end
-		end
+    for j=1:length(start_node)
+      if start_node[j]==_start && end_node[j]==_end
+        _x[j] = 1
+        break
+      end
+    end
 
-	end
-	_x
+  end
+  _x
 end
 
 
@@ -45,8 +45,8 @@ distmx = Inf*ones(no_node, no_node)
 
 # Adding links to the graph
 for i=1:no_link
-	add_edge!(graph, start_node[i], end_node[i])
-	distmx[start_node[i], end_node[i]] = c[i]
+  add_edge!(graph, start_node[i], end_node[i])
+  distmx[start_node[i], end_node[i]] = c[i]
 end
 
 # Run Dijkstra's Algorithm from the origin node to all nodes
