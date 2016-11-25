@@ -115,7 +115,7 @@ for i in 1:length(my_keys)
 end
 @show d
 for (key, value) in d
-	println("$key is a $value player.")
+  println("$key is a $value player.")
 end
 
 d["Diego Maradona"] = "football"
@@ -135,7 +135,7 @@ end
 
 # Function
 function f(x,y)
-	return 3x + y
+  return 3x + y
 end
 @show f(1,3)
 @show 3 * ( f(3,2) + f(5,6) )
@@ -143,9 +143,9 @@ g(x,y) = 3x+y
 @show g(1,3)
 
 function my_func(n, m)
-	a = zeros(n,1)
-	b = ones(m,1)
-	return a, b
+  a = zeros(n,1)
+  b = ones(m,1)
+  return a, b
 end
 x, y = my_func(3,2)
 @show x
@@ -209,7 +209,7 @@ mu = 50; sigma = 3;
 @show randn(10) * sigma + mu
 
 function my_randn(n, mu, sigma)
-	return randn(n) * sigma + mu
+  return randn(n) * sigma + mu
 end
 @show my_randn(10, 50, 3)
 
@@ -258,6 +258,6 @@ value2 = [4.3; 7.0; 3.6; 6.2]
 resultfile = open("result.csv", "w")
 println(resultfile, "node, first value, second value")
 for i in 1:length(value1)
-	println(resultfile, "$i, $(value1[i]), $(value2[i])")
+  println(resultfile, "$i, $(value1[i]), $(value2[i])")
 end
 close(resultfile)

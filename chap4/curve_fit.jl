@@ -1,5 +1,5 @@
-using LsqFit		# for curve fitting
-using PyPlot		# for drawing plots
+using LsqFit    # for curve fitting
+using PyPlot    # for drawing plots
 
 # preparing data for fitting
 xdata = [ 15.2; 19.9;  2.2; 11.8; 12.1; 18.1; 11.8; 13.4; 11.5;  0.5;
