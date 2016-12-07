@@ -23,7 +23,7 @@ for i in 1:length(supply_nodes)
   end
 end
 
-# Preapring an Optimization Model
+# Preparing an Optimization Model
 tp = Model(solver=GurobiSolver())
 
 @variable(tp, x[supply_nodes, demand_nodes] >= 0)
