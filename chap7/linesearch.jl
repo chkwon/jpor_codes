@@ -11,5 +11,5 @@ d_bar = [-1.0, 0.0]
 opt = optimize( lambda -> f_line(x_bar, d_bar, lambda),
                              0.0, 1.0, GoldenSection())
 
-println("optimal lambda = ", opt.minimizer)
-println("optimal f(x+lambda*d) = ", opt.minimum)
+println("optimal lambda = ", Optim.minimizer(opt))
+println("optimal f(x+lambda*d) = ", Optim.minimum(opt))
