@@ -27,13 +27,13 @@ end
 tp = Model(solver=GurobiSolver())
 
 @variable(tp, x[supply_nodes, demand_nodes] >= 0)
-@objective(tp, Min, sum{c_dict[i,j]*x[i,j],
-                    i in supply_nodes, j in demand_nodes})
+@objective(tp, Min, sum(c_dict[i,j]*x[i,j]
+                    for i in supply_nodes, j in demand_nodes))
 for i in supply_nodes
-  @constraint(tp, sum{x[i,j], j in demand_nodes} == s_dict[i] )
+  @constraint(tp, sum(x[i,j] for j in demand_nodes) == s_dict[i] )
 end
 for j in demand_nodes
-  @constraint(tp, sum{x[i,j], i in supply_nodes} == d_dict[j] )
+  @constraint(tp, sum(x[i,j] for i in supply_nodes) == d_dict[j] )
 end
 
 print(tp)

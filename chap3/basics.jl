@@ -248,8 +248,8 @@ header = csvdata[2]
 @show data
 @show header
 
-@show start_node = round(Int, data[:,1])
-@show end_node = round(Int, data[:,2])
+@show start_node = round.(Int, data[:,1])
+@show end_node = round.(Int, data[:,2])
 @show link_length = data[:,3]
 
 value1 = [1.4; 3.1; 5.3; 2.7]

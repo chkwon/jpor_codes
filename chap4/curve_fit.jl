@@ -9,7 +9,7 @@ ydata = [ 0.73; 0.19; 1.54; 2.08; 0.84; 0.42; 1.77; 0.86; 1.95; 0.27;
 
 # defining a model
 model(x,beta) = beta[1] * ((x/beta[2]).^(beta[3]-1)) .*
-                          (exp( - (x/beta[2]).^beta[3] ))
+                          (exp.( - (x/beta[2]).^beta[3] ))
 
 # run the curve fitting algorithm
 fit = curve_fit(model, xdata, ydata, [3.0, 8.0, 3.0])

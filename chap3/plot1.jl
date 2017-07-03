@@ -5,7 +5,7 @@ fig = figure()
 
 # Data
 x = linspace(0,2*pi,1000)
-y = sin(3*x)
+y = sin.(3*x)
 
 # Plotting with linewidth and linestyle specified
 plot(x, y, color="blue", linewidth=2.0, linestyle="--")
