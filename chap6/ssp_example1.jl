@@ -28,8 +28,8 @@ network_data = readcsv(network_data_file,  header=true)
 data = network_data[1]
 header = network_data[2]
 
-start_node = round(Int64, data[:,1])
-end_node = round(Int64, data[:,2])
+start_node = round.(Int64, data[:,1])
+end_node = round.(Int64, data[:,2])
 c = data[:,3]
 
 origin = 1
