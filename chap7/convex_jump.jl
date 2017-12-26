@@ -1,5 +1,5 @@
-using JuMP, CPLEX
-m = Model(solver=CplexSolver())
+using JuMP, Gurobi
+m = Model(solver=GurobiSolver())
 
 @variable(m, x[1:2])
 @objective(m, Min, (x[1]-3)^2 + (x[2]-4)^2)
