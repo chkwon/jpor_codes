@@ -13,9 +13,6 @@ matrix:
 notifications:
     email: false
 sudo: false
-addons:
-    apt_packages:
-        - gfortran
 script:
-    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia test/runtests.jl'
+    - git clone https://github.com/chkwon/jpor_codes.git jpor_codes
+    - julia jpor_codes/test/runtests.jl
