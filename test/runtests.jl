@@ -1,4 +1,5 @@
 # Pkg.update()
+using Base.Test
 
 isTravis = false
 if length(ARGS)>0
@@ -68,7 +69,8 @@ end
 if length(ARGS)>0
   if ARGS[1] == "gurobi_on"
       turn_gurobi(:on)
-      error("Gurobi turned on. Test did not run.")
+      info("Gurobi turned on. Test did not run. Program quitting...")
+      quit()
   end
 end
 
@@ -77,10 +79,6 @@ if isTravis
 else
     turn_gurobi(:on)
 end
-
-
-
-
 
 
 for item in current
@@ -158,6 +156,9 @@ for i in 1:length(fails)
   info(fails[i], " fails")
   warn(errors[i])
 end
+
+@test length(fails) == 0
+
 
 
 
