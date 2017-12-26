@@ -1,0 +1,21 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
+
+language: julia
+os:
+    - linux
+    - osx
+julia:
+    - 0.6
+    - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
+notifications:
+    email: false
+sudo: false
+addons:
+    apt_packages:
+        - gfortran
+script:
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia test/runtests.jl'
