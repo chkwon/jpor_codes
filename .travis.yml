@@ -15,4 +15,4 @@ notifications:
 sudo: false
 script:
     - git clone https://github.com/chkwon/jpor_codes.git jpor_codes
-    - julia jpor_codes/test/runtests.jl
+    - julia jpor_codes/test/runtests.jl travis
