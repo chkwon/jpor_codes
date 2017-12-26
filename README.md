@@ -7,10 +7,13 @@
 [Lear more about the book](http://www.chkwon.net/julia/)
 
 Currently tested with:
-- Julia v0.6.0
-- JuMP v0.17.1
-- Optim v0.7.8
+- Julia v0.6.2
+- JuMP v0.18.0
+- Optim v0.11.0
 - MathProgBase v0.6.4
+
+
+
 
 For previous versions:
 - [Julia v0.5 / JuMP v0.14](https://github.com/chkwon/jpor_codes/tree/v0.5.0)
