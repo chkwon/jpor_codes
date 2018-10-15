@@ -1,6 +1,5 @@
-using JuMP
-using Gurobi
-m = Model(solver=GurobiSolver())
+using JuMP, GLPK
+m = Model(with_optimizer(GLPK.Optimizer))
 
 c = [ 1; 2; 5]
 A = [-1  1  3;
@@ -18,16 +17,14 @@ index_constraints = 1:2
 
 @constraint(m, bound, x[1] <= 10)
 
-solve(m)
-
-print(m)
+JuMP.optimize!(m)
 
 println("Optimal Solutions:")
 for i in index_x
-  println("x[$i] = ", getvalue(x[i]))
+  println("x[$i] = ", JuMP.result_value(x[i]))
 end
 
 println("Dual Variables:")
 for j in index_constraints
-  println("dual[$j] = ", getdual(constraint[j]))
+  println("dual[$j] = ", JuMP.result_dual(constraint[j]))
 end
