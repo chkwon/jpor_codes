@@ -8,11 +8,11 @@ function generate_sample_path(adj_mtx, origin, destination)
   current = origin
 
   # Disconnect origin from all other nodes
-  adj_copy[:, origin] = 0
+  adj_copy[:, origin] .= 0
 
   while current != destination
     # Find all nodes connected to current
-    V = find(adj_copy[current,:])
+    V = findall(adj_copy[current,:] .==1 )
     if length(V)==0
       break
     end
@@ -23,7 +23,7 @@ function generate_sample_path(adj_mtx, origin, destination)
 
     # Update variables for the next iteration
     current = next
-    adj_copy[:, next] = 0
+    adj_copy[:, next] .= 0
     g = g / length(V)
   end
 

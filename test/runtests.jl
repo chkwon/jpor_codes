@@ -1,5 +1,5 @@
 # Pkg.update()
-using Base.Test
+using Base.Test, Pkg
 
 isTravis = false
 if length(ARGS)>0
@@ -162,8 +162,8 @@ end
 
 
 
-println("JuMP v", Pkg.installed("JuMP"))
-println("Optim v", Pkg.installed("Optim"))
-println("MathProgBase v", Pkg.installed("MathProgBase"))
+println("JuMP v", Pkg.installed()["JuMP"])
+println("Optim v", Pkg.installed()["Optim"])
+println("MathOptInterface v", Pkg.installed()["MathOptInterface"])
 
 versioninfo()
