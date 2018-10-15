@@ -1,5 +1,5 @@
-using JuMP, Gurobi
-m = Model(solver=GurobiSolver())
+using JuMP, GLPK
+m = Model(with_optimizer(GLPK.Optimizer))
 
 @variable(m, 0 <= x <= 2 )
 @variable(m, 0 <= y <= 30 )
@@ -8,10 +8,7 @@ m = Model(solver=GurobiSolver())
 
 @constraint(m, 1x + 5y <= 3.0 )
 
-print(m)
-
-status = solve(m)
-
-println("Objective value: ", getobjectivevalue(m))
-println("x = ", getvalue(x))
-println("y = ", getvalue(y))
+JuMP.optimize!(m)
+println("Objective value: ", JuMP.objective_value(m))
+println("x = ", JuMP.result_value(x))
+println("y = ", JuMP.result_value(y))
