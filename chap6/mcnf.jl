@@ -1,5 +1,5 @@
 function minimal_cost_network_flow(nodes, links, c_dict, u_dict, b)
-  mcnf = Model(solver=GurobiSolver())
+  mcnf = Model(with_optimizer(GLPK.Optimizer()))
 
   @variable(mcnf, 0<= x[link in links] <= u_dict[link])
 
@@ -10,9 +10,9 @@ function minimal_cost_network_flow(nodes, links, c_dict, u_dict, b)
                     - sum(x[(j,ii)] for (j,ii) in links if ii==i ) == b[i])
   end
 
-  status = solve(mcnf)
-  obj = getobjectivevalue(mcnf)
-  x_star = getvalue(x)
+  JuMP.optimize!(mcnf)
+  obj = JuMP.objective_value(mcnf)
+  x_star = JuMP.result_value.(x)
 
-  return x_star, obj, status
+  return x_star, obj
 end
