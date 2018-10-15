@@ -1,10 +1,10 @@
-using Combinatorics
+using LinearAlgebra, Combinatorics
 
-function isnonnegative(x::Array{Float64, 1})
+function is_nonnegative(x::Vector)
   return length( x[ x .< 0] ) == 0
 end
 
-function searchBFS(c, A, b)
+function search_BFS(c, A, b)
   m, n = size(A)
   @assert rank(A) == m
 
@@ -16,7 +16,7 @@ function searchBFS(c, A, b)
     c_B = c[b_idx]
     x_B = inv(B) * b
 
-    if isnonnegative(x_B)
+    if is_nonnegative(x_B)
       z = dot(c_B, x_B)
       if z < obj
         obj = z
@@ -27,8 +27,8 @@ function searchBFS(c, A, b)
 
     println("Basis:", b_idx)
     println("\t x_B = ", x_B)
-    println("\t nonnegative? ", isnonnegative(x_B))
-    if isnonnegative(x_B)
+    println("\t nonnegative? ", is_nonnegative(x_B))
+    if is_nonnegative(x_B)
       println("\t obj = ", dot(c_B, x_B))
     end
 

@@ -1,19 +1,23 @@
 module SimplexMethod
 
-  using Combinatorics
+  using LinearAlgebra, Combinatorics, Printf
 
   export simplex_method
 
-  type SimplexTableau
-    z_c     ::Array{Float64}
-    Y       ::Array{Float64}
-    x_B     ::Array{Float64}
-    obj     ::Float64
-    b_idx   ::Array{Int64}
+  mutable struct SimplexTableau
+    z_c     ::Array{Float64} # z_j - c_j
+    Y       ::Array{Float64} # inv(B) * A
+    x_B     ::Array{Float64} # inv(B) * b
+    obj     ::Float64        # c_B * x_B
+    b_idx   ::Array{Int64}   # indices for basic variables x_B
   end
 
-  function isnonnegative(x::Array{Float64})
+  function is_nonnegative(x::Vector)
     return length( x[ x .< 0] ) == 0
+  end
+
+  function is_nonpositive(z::Array)
+    return length( z[ z .> 0] ) == 0
   end
 
   function initial_BFS(A, b)
@@ -24,7 +28,7 @@ module SimplexMethod
       b_idx = comb[i]
       B = A[:, b_idx]
       x_B = inv(B) * b
-      if isnonnegative(x_B)
+      if is_nonnegative(x_B)
         return b_idx, x_B, B
       end
     end
@@ -86,22 +90,22 @@ module SimplexMethod
     t.obj -= coef * t.x_B[exiting]
 
     # Updating b_idx
-    t.b_idx[ find(t.b_idx.==t.b_idx[exiting]) ] = entering
+    t.b_idx[ findfirst(t.b_idx .== t.b_idx[exiting]) ] = entering
   end
 
   function pivot_point(t::SimplexTableau)
     # Finding the entering variable index
-    entering = findfirst(t.z_c .> 0)
+    entering = findfirst( t.z_c .> 0)[2]
     if entering == 0
       error("Optimal")
     end
 
     # min ratio test / finding the exiting variable index
-    pos_idx = find( t.Y[:, entering] .> 0 )
+    pos_idx = findall( t.Y[:, entering] .> 0 )
     if length(pos_idx) == 0
       error("Unbounded")
     end
-    exiting = pos_idx[ indmin( t.x_B[pos_idx] ./ t.Y[pos_idx, entering] ) ]
+    exiting = pos_idx[ argmin( t.x_B[pos_idx] ./ t.Y[pos_idx, entering] ) ]
 
     return entering, exiting
   end
@@ -128,15 +132,15 @@ module SimplexMethod
     return SimplexTableau(z_c, Y, x_B, obj, b_idx)
   end
 
-  function isOptimal(tableau)
-    return findfirst( tableau.z_c .> 0 ) == 0
+  function is_optimal(t::SimplexTableau)
+    return is_nonpositive(t.z_c)
   end
 
   function simplex_method(c, A, b)
     tableau = initialize(c, A, b)
     print_tableau(tableau)
 
-    while !isOptimal(tableau)
+    while !is_optimal(tableau)
       pivoting!(tableau)
       print_tableau(tableau)
     end
