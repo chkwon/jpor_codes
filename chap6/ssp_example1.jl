@@ -1,5 +1,5 @@
 # Importing packages
-using LightGraphs
+using LightGraphs, DelimitedFiles
 
 # Retrieves 0-1 'x' vector from the 'state'
 function getShortestX(state, start_node, end_node, origin, destination)
@@ -24,7 +24,7 @@ end
 
 # Data Preparation
 network_data_file = "simple_network.csv"
-network_data = readcsv(network_data_file,  header=true)
+network_data = readdlm(network_data_file, ',', header=true)
 data = network_data[1]
 header = network_data[2]
 
@@ -62,5 +62,4 @@ println("x vector:", x)
 
 # The cost of shortest path
 println("Cost is $(state.dists[destination])") # directly from state
-println("Cost is $(dot(c, x))")                # c'x in scalar
-println("Cost is $(c' * x)")                   # c'x in 1x1 array
+println("Cost is $(c' * x)")                   # computing from c and x 
