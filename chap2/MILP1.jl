@@ -1,8 +1,7 @@
-using JuMP
-using Gurobi
+using JuMP, GLPK
 
 # Preparing an optimization model
-m = Model(solver=GurobiSolver())
+m = Model(with_optimizer(GLPK.Optimizer))
 
 # Declaring variables
 @variable(m, 0<= x1 <=10)
@@ -20,10 +19,10 @@ m = Model(solver=GurobiSolver())
 print(m)
 
 # Solving the optimization problem
-solve(m)
+JuMP.optimize!(m)
 
 # Printing the optimal solutions obtained
 println("Optimal Solutions:")
-println("x1 = ", getvalue(x1))
-println("x2 = ", getvalue(x2))
-println("x3 = ", getvalue(x3))
+println("x1 = ", JuMP.result_value(x1))
+println("x2 = ", JuMP.result_value(x2))
+println("x3 = ", JuMP.result_value(x3))
