@@ -1,11 +1,11 @@
 using JuMP, Ipopt
-m = Model(solver=IpoptSolver())
+m = Model(with_optimizer(Ipopt.Optimizer))
 
 @variable(m, x[1:2])
 @objective(m, Min, (x[1]-3)^2 + (x[2]-4)^2)
 @constraint(m, (x[1]-1)^2 + (x[2]+1)^2 <= 1)
 
-solve(m)
+JuMP.optimize!(m)
 
-println("** Optimal objective function value = ", getobjectivevalue(m))
-println("** Optimal solution = ", getvalue(x))
+println("** Optimal objective function value = ", JuMP.objective_value(m))
+println("** Optimal solution = ", JuMP.result_value.(x))
