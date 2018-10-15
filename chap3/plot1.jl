@@ -4,7 +4,7 @@ using PyPlot
 fig = figure()
 
 # Data
-x = linspace(0,2*pi,1000)
+x = range(0, stop=2*pi, length=1000)
 y = sin.(3*x)
 
 # Plotting with linewidth and linestyle specified
