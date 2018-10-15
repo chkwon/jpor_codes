@@ -8,7 +8,7 @@ end
 x_bar = [2.0, 3.0]
 d_bar = [-1.0, 0.0]
 
-opt = optimize( lambda -> f_line(x_bar, d_bar, lambda),
+opt = Optim.optimize( lambda -> f_line(x_bar, d_bar, lambda),
                              0.0, 1.0, GoldenSection())
 
 println("optimal lambda = ", Optim.minimizer(opt))
