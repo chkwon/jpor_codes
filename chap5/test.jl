@@ -16,7 +16,7 @@ m = Model(with_optimizer(GLPK.Optimizer))
 @constraint(m, A*x .== b)
 @time JuMP.optimize!(m)
 obj0 = JuMP.objective_value(m)
-opt_x0 = JuMP.result_value.(x)
+opt_x0 = JuMP.value.(x)
 
 include("search_bfs.jl")
 @time opt_x1, obj1 = search_BFS(c, A, b)

@@ -37,8 +37,8 @@ function optimal(p)
   JuMP.optimize!(m)
 
   Z_opt = JuMP.objective_value(m)
-  x_opt = JuMP.result_value.(x)
-  y_opt = JuMP.result_value.(y)
+  x_opt = JuMP.value.(x)
+  y_opt = JuMP.value.(y)
 
   return Z_opt, x_opt, y_opt
 end

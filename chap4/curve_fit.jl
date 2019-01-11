@@ -16,7 +16,7 @@ fit = curve_fit(model, xdata, ydata, [3.0, 8.0, 3.0])
 
 # results of the fitting
 beta_fit = fit.param
-errors = estimate_errors(fit)
+errors = margin_error(fit)
 
 # preparing the fitting evaluation
 xfit = 0:0.1:20

@@ -12,7 +12,7 @@ function minimal_cost_network_flow(nodes, links, c_dict, u_dict, b)
 
   JuMP.optimize!(mcnf)
   obj = JuMP.objective_value(mcnf)
-  x_star = JuMP.result_value.(x)
+  x_star = JuMP.value.(x)
 
   return x_star, obj
 end

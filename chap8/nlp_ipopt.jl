@@ -8,4 +8,4 @@ m = Model(with_optimizer(Ipopt.Optimizer))
 JuMP.optimize!(m)
 
 println("** Optimal objective function value = ", JuMP.objective_value(m))
-println("** Optimal solution = ", JuMP.result_value.(x))
+println("** Optimal solution = ", JuMP.value.(x))

@@ -2,6 +2,8 @@ using JuMP, AmplNLWriter, CoinOptServices
 m = Model(solver=AmplNLSolver(CoinOptServices.couenne))
 # m = Model(solver=AmplNLSolver(CoinOptServices.bonmin))
 
+# AmplNLWriter.Optimizer
+
 @variable(m, x>=0)
 @variable(m, y[1:2])
 @variable(m, s[1:5]>=0)

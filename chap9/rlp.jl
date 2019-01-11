@@ -1,5 +1,5 @@
 # Importing packages
-using JuMP, Gurobi, Distributions
+using JuMP, GLPK, Distributions
 
 # Product Data
 no_products = 6
@@ -20,19 +20,19 @@ A = [ 1 1 0 0 1 1 ;
 
 # Solving the deterministic LP problem
 function DLP(x, D)
-  m = Model(with_optimizer(Gurobi.Optimizer))
+  m = Model(with_optimizer(GLPK.Optimizer))
   @variable(m, y[products] >= 0)
   @objective(m, Max, sum( p[j]*y[j] for j in products) )
 
   # Resource Constraint
-  @constraint(m, rsc_const[i=1:no_resources],
+  @constraint(m, rsc_const[i in 1:no_resources],
           sum( A[i,j]*y[i] for j in products) <= x[i]  )
 
   # Upper Bound
-  @constraint(m, bounds[j=1:no_products], y[j] <= D[j] )
+  @constraint(m, bounds[j in 1:no_products], y[j] <= D[j] )
 
   JuMP.optimize!(m)
-  pi_val = JuMP.result_dual.(rsc_const)
+  pi_val = JuMP.shadow_price.(rsc_const)
   return pi_val
 end
 
