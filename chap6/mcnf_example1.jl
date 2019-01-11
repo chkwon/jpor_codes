@@ -47,7 +47,7 @@ end
 print(mcnf)
 JuMP.optimize!(mcnf)
 obj = JuMP.objective_value(mcnf)
-x_star = JuMP.result_value.(x)
+x_star = JuMP.value.(x)
 
 println("The optimal objective function value is = $obj")
 println(x_star.data)

@@ -36,7 +36,7 @@ end
 print(tp)
 JuMP.optimize!(tp)
 obj = JuMP.objective_value(tp)
-x_star = JuMP.result_value.(x)
+x_star = JuMP.value.(x)
 
 for s in supply_nodes, d in demand_nodes
     println("from $s to $d: ", x_star[s, d])

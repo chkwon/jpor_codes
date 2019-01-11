@@ -21,10 +21,10 @@ JuMP.optimize!(m)
 
 println("Optimal Solutions:")
 for i in index_x
-  println("x[$i] = ", JuMP.result_value(x[i]))
+  println("x[$i] = ", JuMP.value(x[i]))
 end
 
 println("Dual Variables:")
 for j in index_constraints
-  println("dual[$j] = ", JuMP.result_dual(constraint[j]))
+  println("dual[$j] = ", JuMP.shadow_price(constraint[j]))
 end

@@ -10,5 +10,5 @@ m = Model(with_optimizer(GLPK.Optimizer))
 
 JuMP.optimize!(m)
 println("Objective value: ", JuMP.objective_value(m))
-println("x = ", JuMP.result_value(x))
-println("y = ", JuMP.result_value(y))
+println("x = ", JuMP.value(x))
+println("y = ", JuMP.value(y))

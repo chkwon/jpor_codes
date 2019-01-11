@@ -23,6 +23,6 @@ JuMP.optimize!(m)
 
 # Printing the optimal solutions obtained
 println("Optimal Solutions:")
-println("x1 = ", JuMP.result_value(x1))
-println("x2 = ", JuMP.result_value(x2))
-println("x3 = ", JuMP.result_value(x3))
+println("x1 = ", JuMP.value(x1))
+println("x2 = ", JuMP.value(x2))
+println("x3 = ", JuMP.value(x3))
