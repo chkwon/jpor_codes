@@ -21,8 +21,7 @@ no_link = length(start_node)
 N = Set(1:no_node)
 links = Tuple( (start_node[i], end_node[i]) for i in 1:no_link )
 A = Set(links)
-c_dict = Dict( zip(links, c) )
-
+c_dict = Dict(links .=> c)
 
 function my_dijkstra(N, A, c_dict)
     # Preparing an array

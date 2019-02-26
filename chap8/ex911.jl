@@ -1,8 +1,6 @@
-using JuMP, AmplNLWriter, CoinOptServices
-m = Model(solver=AmplNLSolver(CoinOptServices.couenne))
-# m = Model(solver=AmplNLSolver(CoinOptServices.bonmin))
-
-# AmplNLWriter.Optimizer
+using JuMP, AmplNLWriter
+m = Model(with_optimizer(AmplNLWriter.Optimizer, "/Users/chkwon/ampl/bonmin"))
+# m = Model(with_optimizer(AmplNLWriter.Optimizer, "/Users/chkwon/ampl/couenne"))
 
 @variable(m, x>=0)
 @variable(m, y[1:2])
@@ -22,10 +20,10 @@ for i in 1:5
   @NLconstraint(m, l[i] * s[i] == 0)
 end
 
-solve(m)
+optimize!(m)
 
-println("** Optimal objective function value = ", getobjectivevalue(m))
-println("** Optimal x = ", getvalue(x))
-println("** Optimal y = ", getvalue(y))
-println("** Optimal s = ", getvalue(s))
-println("** Optimal l = ", getvalue(l))
+println("** Optimal objective function value = ", JuMP.objective_value(m))
+println("** Optimal x = ", JuMP.value(x))
+println("** Optimal y = ", JuMP.value.(y))
+println("** Optimal s = ", JuMP.value.(s))
+println("** Optimal l = ", JuMP.value.(l))
