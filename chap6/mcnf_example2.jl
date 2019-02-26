@@ -28,8 +28,8 @@ no_link = length(start_node)
 # Creating a graph
 nodes = 1:no_node
 links = Tuple( (start_node[i], end_node[i]) for i in 1:no_link )
-c_dict = Dict( zip(links, c) )
-u_dict = Dict( zip(links, u) )
+c_dict = Dict(links .=> c)
+u_dict = Dict(links .=> u)
 
 # Solve the minimal-cost network-flow problem by a function call
 x_star, obj = minimal_cost_network_flow(nodes, links, c_dict, u_dict, b)

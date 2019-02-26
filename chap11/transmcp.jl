@@ -1,13 +1,13 @@
-using complementarity, JuMP
+using Complementarity, JuMP
 
 plants = ["seattle", "san-diego"]
 markets = ["new-york", "chicago", "topeka"]
 
 capacity = [350, 600]
-a = Dict(zip(plants, capacity))
+a = Dict(plants .=> capacity)
 
 demand = [325, 300, 275]
-b = Dict(zip(markets, demand))
+b = Dict(markets .=> demand)
 
 distance = [ 2.5 1.7 1.8 ;
              2.5 1.8 1.4  ]
@@ -35,6 +35,6 @@ m = MCPModel()
 
 status = solveMCP(m)
 
-@show getvalue(x)
-@show getvalue(w)
-@show getvalue(p)
+@show result_value.(x)
+@show result_value.(w)
+@show result_value.(p)

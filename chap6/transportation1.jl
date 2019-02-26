@@ -13,12 +13,10 @@ d = collect(data[1, 3:end])
 c = data[3:end, 3:end]
 
 # Converting arrays to dictionaries
-s_dict = Dict( zip( supply_nodes, s) )
-d_dict = Dict( zip( demand_nodes, d) )
-
+s_dict = Dict(supply_nodes .=> s)
+d_dict = Dict(demand_nodes .=> d)
 c_dict = Dict( (supply_nodes[i], demand_nodes[j]) => c[i,j]
           for i in 1:length(supply_nodes), j in 1:length(demand_nodes) )
-
 
 # Preparing an Optimization Model
 tp = Model(with_optimizer(GLPK.Optimizer))

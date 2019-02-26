@@ -26,8 +26,8 @@ no_link = length(start_node)
 # Creating a graph
 nodes = 1:no_node
 links = Tuple( (start_node[i], end_node[i]) for i in 1:no_link )
-c_dict = Dict( zip(links, c) )
-u_dict = Dict( zip(links, u) )
+c_dict = Dict(links .=> c)
+u_dict = Dict(links .=> u)
 
 # Preparing an optimization model
 mcnf = Model(with_optimizer(GLPK.Optimizer))

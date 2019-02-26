@@ -28,7 +28,5 @@ m = MCPModel()
 
 status = solveMCP(m)
 
-@show getvalue(h)
-@show getvalue(u)
-@show getvalue(excess_cost)
-@show getvalue(excess_demand)
+@show result_value.(h)
+@show result_value(u)
