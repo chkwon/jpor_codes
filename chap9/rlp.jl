@@ -26,7 +26,7 @@ function DLP(x, D)
 
   # Resource Constraint
   @constraint(m, rsc_const[i in 1:no_resources],
-          sum( A[i,j]*y[i] for j in products) <= x[i]  )
+          sum( A[i,j]*y[j] for j in products) <= x[i]  )
 
   # Upper Bound
   @constraint(m, bounds[j in 1:no_products], y[j] <= D[j] )
