@@ -10,7 +10,7 @@ b = Array{Float64}(b)
 
 
 using JuMP, GLPK, LinearAlgebra
-m = Model(with_optimizer(GLPK.Optimizer))
+m = Model(GLPK.Optimizer
 @variable(m, x[1:length(c)] >=0 )
 @objective(m, Min, dot(c, x))
 @constraint(m, A*x .== b)

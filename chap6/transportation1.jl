@@ -19,7 +19,7 @@ c_dict = Dict( (supply_nodes[i], demand_nodes[j]) => c[i,j]
           for i in 1:length(supply_nodes), j in 1:length(demand_nodes) )
 
 # Preparing an Optimization Model
-tp = Model(with_optimizer(GLPK.Optimizer))
+tp = Model(GLPK.Optimizer
 
 @variable(tp, x[supply_nodes, demand_nodes] >= 0)
 @objective(tp, Min, sum(c_dict[i,j]*x[i,j]

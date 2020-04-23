@@ -1,5 +1,5 @@
 using JuMP, GLPK
-m = Model(with_optimizer(GLPK.Optimizer))
+m = Model(GLPK.Optimizer
 
 c = [ 1; 2; 5]
 A = [-1  1  3;

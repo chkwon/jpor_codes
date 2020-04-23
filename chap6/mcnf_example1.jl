@@ -30,7 +30,7 @@ c_dict = Dict(links .=> c)
 u_dict = Dict(links .=> u)
 
 # Preparing an optimization model
-mcnf = Model(with_optimizer(GLPK.Optimizer))
+mcnf = Model(GLPK.Optimizer
 
 # Defining decision variables
 @variable(mcnf, 0<= x[link in links] <= u_dict[link])

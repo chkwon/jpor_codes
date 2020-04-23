@@ -1,5 +1,5 @@
 using JuMP, Ipopt
-m = Model(with_optimizer(Ipopt.Optimizer))
+m = Model(Ipopt.Optimizer
 
 @variable(m, x[1:2])
 @NLobjective(m, Min, (x[1]-3)^3 + (x[2]-4)^2)

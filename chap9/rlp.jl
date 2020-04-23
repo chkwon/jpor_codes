@@ -20,7 +20,7 @@ A = [ 1 1 0 0 1 1 ;
 
 # Solving the deterministic LP problem
 function DLP(x, D)
-  m = Model(with_optimizer(GLPK.Optimizer))
+  m = Model(GLPK.Optimizer
   @variable(m, y[products] >= 0)
   @objective(m, Max, sum( p[j]*y[j] for j in products) )
 

@@ -1,6 +1,6 @@
 using JuMP, AmplNLWriter
-m = Model(with_optimizer(AmplNLWriter.Optimizer, "/Users/chkwon/ampl/bonmin"))
-# m = Model(with_optimizer(AmplNLWriter.Optimizer, "/Users/chkwon/ampl/couenne"))
+m = Model( () -> AmplNLWriter.Optimizer("/Users/chkwon/ampl/bonmin"))
+# m = Model( () -> AmplNLWriter.Optimizer("/Users/chkwon/ampl/couenne"))
 
 @variable(m, x>=0)
 @variable(m, y[1:2])

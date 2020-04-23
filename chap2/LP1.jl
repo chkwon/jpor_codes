@@ -1,7 +1,7 @@
 using JuMP, GLPK
 
 # Preparing an optimization model
-m = Model(with_optimizer(GLPK.Optimizer))
+m = Model(GLPK.Optimizer
 
 # Declaring variables
 @variable(m, 0<= x1 <=10)
