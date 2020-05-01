@@ -1,5 +1,5 @@
 function minimal_cost_network_flow(nodes, links, c_dict, u_dict, b)
-  mcnf = Model(GLPK.Optimizer
+  mcnf = Model(GLPK.Optimizer)
 
   @variable(mcnf, 0<= x[link in links] <= u_dict[link])
 

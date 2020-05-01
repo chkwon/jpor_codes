@@ -22,7 +22,7 @@ global locations, customers, c
 
 
 function optimal(p)
-  m = Model(GLPK.Optimizer
+  m = Model(GLPK.Optimizer)
 
   @variable(m, x[i in locations, j in customers] >= 0)
   @variable(m, y[i in locations], Bin)

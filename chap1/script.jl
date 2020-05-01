@@ -1,5 +1,5 @@
 using JuMP, GLPK
-m = Model(GLPK.Optimizer
+m = Model(GLPK.Optimizer)
 
 @variable(m, 0 <= x <= 2 )
 @variable(m, 0 <= y <= 30 )
