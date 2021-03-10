@@ -1,8 +1,8 @@
-# Code Repository for "Julia Programming for Operations Research: A Primer on Computing"
+# Code Repository for "Julia Programming for Operations Research"
 
 <!-- [![Build Status](https://travis-ci.org/chkwon/jpor_codes.svg?branch=master)](https://travis-ci.org/chkwon/jpor_codes) -->
 
-<a href="http://www.chkwon.net/julia/"><img src="http://www.chkwon.net/julia/book/cover.png" width=300 border=1></a>
+<a href="https://www.chkwon.net/julia/"><img src="https://www.chkwon.net/julia/book/cover.png" width=300 border=1></a>
 
 [Lear more about the book](http://www.chkwon.net/julia/)
 
